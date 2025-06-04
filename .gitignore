@@ -54,3 +54,21 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+/assets/images/*
+.vscode/*
+*.pdf
+*.html
+*.docx
+*.doc
+*.xls
+*.xlsx
+*.pptx
+*.ppt
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
+*.md

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu Código de
+        Verificación - OMP Abogados</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #27292b;
+            /* Color Primario Oscuro OMP */
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .email-wrapper {
+            background-color: #ffffff;
+            max-width: 600px;
+            margin: 20px auto;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        .email-header {
+            background-color: #27292b;
+            /* Color Primario Oscuro OMP */
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .email-header img {
+            max-width: 180px;
+            /* Ajustado para el logo OMP */
+            height: auto;
+        }
+
+        .email-content {
+            padding: 30px;
+            text-align: left;
+            /* Cambiado para mejor legibilidad de listas */
+        }
+
+        .email-content h1 {
+            font-size: 24px;
+            color: #27292b;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+            /* Centrar título principal */
+        }
+
+        .email-content h2 {
+            font-size: 18px;
+            color: #27292b;
+            /* Color Primario Oscuro OMP */
+            margin-top: 25px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            border-bottom: 1px solid #eeeeee;
+            padding-bottom: 5px;
+        }
+
+        .email-content p {
+            font-size: 16px;
+            color: #555555;
+            margin-bottom: 15px;
+            /* Reducido para párrafos generales */
+            line-height: 1.7;
+        }
+
+        .centered-p {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .verification-code-container {
+            text-align: center;
+            margin: 25px 0;
+        }
+
+        .verification-code {
+            font-size: 38px;
+            font-weight: 700;
+            color: #ec8b3b;
+            background-color: #fdf5ee;
+            /* Fondo naranja muy claro */
+            padding: 15px 30px;
+            margin: 0 auto;
+            border-radius: 6px;
+            display: inline-block;
+            letter-spacing: 4px;
+            border: 1px solid #ec8b3b;
+        }
+
+        .code-validity {
+            font-size: 14px;
+            color: #ec8b3b;
+            margin-top: 10px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .instructions-list {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 20px;
+        }
+
+        .instructions-list li {
+            margin-bottom: 12px;
+            font-size: 15px;
+            color: #555555;
+            display: flex;
+            align-items: center;
+        }
+
+        .instructions-list .icon {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            line-height: 22px;
+            border-radius: 50%;
+            background-color: #ec8b3b;
+            /* Naranja OMP */
+            color: white;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .info-box {
+            font-size: 14px;
+            color: #555555;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .important-box {
+            background-color: #fff8e1;
+            /* Amarillo claro para advertencia */
+            border-left: 4px solid #ec8b3b;
+            /* Naranja OMP */
+        }
+
+        .important-box strong {
+            color: #ec8b3b;
+            /* Naranja OMP */
+        }
+
+        .security-box {
+            background-color: #f9f9f9;
+            /* Gris muy claro */
+            border-left: 4px solid #27292b;
+            /* Primario Oscuro OMP */
+        }
+
+        .security-box strong {
+            color: #27292b;
+            /* Primario Oscuro OMP */
+        }
+
+        .info-box ul {
+            padding-left: 20px;
+            margin-top: 10px;
+            margin-bottom: 0;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+
+        .email-footer {
+            text-align: center;
+            padding: 20px 30px;
+            font-size: 12px;
+            color: #aaaaaa;
+            background-color: #27292b;
+            /* Color Primario Oscuro OMP */
+            border-top: 1px solid #3c3e40;
+        }
+
+        .email-footer p {
+            margin: 5px 0;
+            color: #dddddd;
+        }
+
+        .email-footer a {
+            color: #ec8b3b;
+            /* Naranja OMP */
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-wrapper">
+        <div class="email-header">
+            <img src="cid:logo_omp_mfa@ompabogados.com" alt="OMP Abogados Logo">
+        </div>
+        <div class="email-content">
+            <h1>Tu Código de Verificación</h1>
+            <p class="centered-p">Hola {{clientName}},</p>
+            <p class="centered-p">Para completar tu solicitud de forma segura, por favor utiliza el siguiente código:
+            </p>
+            <div class="verification-code-container">
+                <div class="verification-code">{{otpCode}}</div>
+            </div>
+            <p class="code-validity">Este código es válido por <strong>{{mfaSessionDurationMinutes}} minutos</strong>.
+            </p>
+
+            <h2><span style="color: #ec8b3b;">▶</span> Cómo usar este código:</h2>
+            <ul class="instructions-list">
+                <li><span class="icon">1</span>Regresa a la conversación de WhatsApp.</li>
+                <li><span class="icon">2</span>Escribe exactamente este código: <strong>{{otpCode}}</strong></li>
+                <li><span class="icon">3</span>Envía el mensaje para verificar tu identidad.</li>
+                <li><span class="icon">4</span>Continúa con la solicitud de tu certificado.</li>
+            </ul>
+
+            <div class="info-box important-box">
+                <p><strong>Importante:</strong></p>
+                <ul>
+                    <li>Este código es de un solo uso.</li>
+                    <li>No compartas este código con nadie.</li>
+                    <li>Si no solicitaste este código, ignora este email.</li>
+                    <li>El código expira automáticamente en {{mfaSessionDurationMinutes}} minutos.</li>
+                </ul>
+            </div>
+
+            <div class="info-box security-box">
+                <p><strong>Consejos de Seguridad:</strong></p>
+                <ul>
+                    <li>Nuestro personal nunca te pedirá este código por teléfono.</li>
+                    <li>Solo ingresa el código en la conversación oficial de WhatsApp de OMP Abogados.</li>
+                    <li>Si tienes dudas, contacta directamente con nuestro soporte.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="email-footer">
+            <p>&copy; {{currentYear}} OMP Abogados S.A.S.</p>
+            <p>Todos los derechos reservados.</p>
+            <p>Este es un mensaje automático, por favor no respondas a este correo.</p>
+        </div>
+    </div>
+</body>
+
+</html>

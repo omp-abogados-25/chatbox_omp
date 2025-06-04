@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificado Laboral Generado - OMP Abogados</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #27292b;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .email-wrapper {
+            background-color: #ffffff;
+            max-width: 680px;
+            margin: 20px auto;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        .email-header {
+            background-color: #27292b;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .email-header img {
+            max-width: 180px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .email-header h1 {
+            color: #ffffff;
+            font-size: 26px;
+            margin-top: 0;
+            margin-bottom: 0;
+            font-weight: 600;
+        }
+
+        .email-header h1 .emoji {
+            margin-right: 10px;
+        }
+
+        .email-content {
+            padding: 30px;
+        }
+
+        .email-content h2 {
+            font-size: 22px;
+            color: #27292b;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .email-content p {
+            font-size: 16px;
+            color: #555555;
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+
+        .highlight-box {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            border-left: 4px solid #ec8b3b;
+        }
+
+        .highlight-box p {
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .highlight-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .highlight-box strong {
+            color: #27292b;
+        }
+
+        .attachments-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eeeeee;
+        }
+
+        .attachments-section h3 {
+            font-size: 18px;
+            color: #ec8b3b;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .attachments-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .attachments-list li {
+            margin-bottom: 10px;
+            font-size: 15px;
+            color: #444444;
+        }
+
+        .attachments-list li::before {
+            content: '\1F4CE';
+            margin-right: 8px;
+            color: #ec8b3b;
+        }
+
+        .important-info {
+            font-size: 14px;
+            color: #555555;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9f5fe;
+            border-radius: 6px;
+            border-left: 4px solid #27292b;
+        }
+
+        .important-info strong {
+            color: #27292b;
+        }
+
+        .email-footer {
+            text-align: center;
+            padding: 20px 30px;
+            font-size: 12px;
+            color: #aaaaaa;
+            background-color: #27292b;
+            border-top: 1px solid #3c3e40;
+        }
+
+        .email-footer p {
+            margin: 5px 0;
+            color: #dddddd;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-wrapper">
+        <div class="email-header">
+            <img src="cid:logo_omp_cert@ompabogados.com" alt="OMP Abogados Logo">
+            <h1><span class="emoji">📄</span>Certificado Laboral Generado</h1>
+        </div>
+        <div class="email-content">
+            <h2>Estimado/a {{clientName}},</h2>
+            <p>Nos complace informarte que tu certificado laboral ha sido generado exitosamente y se encuentra adjunto a
+                este correo.</p>
+
+            <div class="highlight-box">
+                <p><strong>Detalles de la solicitud:</strong></p>
+                <p><strong>Nombre:</strong> {{clientName}}</p>
+                <p><strong>Documento:</strong> {{documentInfo}}</p>
+                <p><strong>Tipo de Certificado:</strong> {{certificateTypeDescription}}</p>
+                <p><strong>Fecha de Generación:</strong> {{generationDate}}</p>
+                <p><strong>Hora de Generación:</strong> {{generationTime}}</p>
+            </div>
+
+            <div class="attachments-section">
+                <h3>Archivos Adjuntos:</h3>
+                <ul class="attachments-list">
+                    <li><strong>Certificado Laboral (PDF):</strong> Documento oficial.</li>
+                    <li><strong>Transcripción del Chat (TXT):</strong> Registro de la conversación.</li>
+                </ul>
+            </div>
+
+            <div class="important-info">
+                <p><strong>Información Importante:</strong></p>
+                <p>Este certificado tiene validez oficial y puedes utilizarlo para los fines que requieras. Si necesitas
+                    alguna verificación o tienes alguna consulta, no dudes en contactarnos a través de nuestros canales
+                    oficiales.</p>
+            </div>
+        </div>
+        <div class="email-footer">
+            <p>&copy; {{currentYear}} OMP Abogados S.A.S. Todos los derechos reservados.</p>
+            <p>Este es un mensaje automático del Sistema de Certificados Laborales de OMP Abogados.</p>
+        </div>
+    </div>
+</body>
+
+</html>

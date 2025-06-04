@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style type="text/css">
+        * {
+            font-family: 'Arial Narrow', Arial, sans-serif !important;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+
+        @font-face {
+            font-family: 'Arial Narrow';
+            src: url('fonts/arialnarrow.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Arial Narrow';
+            src: url('fonts/arialnarrow_bold.ttf') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Arial Narrow';
+            src: url('fonts/arialnarrow_italic.ttf') format('truetype');
+            font-weight: normal;
+            font-style: italic;
+        }
+
+        @font-face {
+            font-family: 'Arial Narrow';
+            src: url('fonts/arialnarrow_bolditalic.ttf') format('truetype');
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        ol {
+            margin: 0;
+            padding: 0
+        }
+
+        table td,
+        table th {
+            padding: 0
+        }
+
+        .c5 {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            orphans: 2;
+            widows: 2;
+            text-align: center;
+            height: 11pt
+        }
+
+        .c6 {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            orphans: 2;
+            widows: 2;
+            text-align: left;
+            height: 11pt
+        }
+
+        .c9 {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        .c12 {
+            padding-top: 0pt;
+            padding-bottom: 10pt;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        .c4 {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            orphans: 2;
+            widows: 2;
+            text-align: justify
+        }
+
+        .c10 {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            orphans: 2;
+            widows: 2;
+            text-align: justify
+        }
+
+        .c8 {
+            padding-bottom: 20pt;
+            line-height: 1.5;
+            orphans: 2;
+            widows: 2;
+            text-align: center
+        }
+
+        .c2 {
+            color: #000000;
+            text-decoration: none;
+            vertical-align: baseline;
+            font-style: normal
+        }
+
+        .c11 {
+            font-weight: 400;
+            font-size: 11pt;
+            font-family: "Arial Narrow"
+        }
+
+        .c3 {
+            font-weight: 700;
+            font-size: 14pt;
+            font-family: "Arial Narrow"
+        }
+
+        .c13 {
+            background-color: #ffffff;
+            max-width: 728pt;
+        }
+
+        .c0 {
+            font-size: 14pt;
+            font-weight: 400;
+            font-family: "Arial Narrow"
+        }
+
+        .c7 {
+            height: 30pt
+        }
+
+        .c1 {
+            background-color: #ffff00
+        }
+
+        .title {
+            padding-top: 24pt;
+            color: #000000;
+            font-weight: 700;
+            font-size: 36pt;
+            padding-bottom: 6pt;
+            font-family: "Calibri";
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        .subtitle {
+            padding-top: 18pt;
+            color: #666666;
+            font-size: 24pt;
+            padding-bottom: 4pt;
+            font-family: "Georgia";
+            line-height: 1.5;
+            page-break-after: avoid;
+            font-style: italic;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        li {
+            color: #000000;
+            font-size: 11pt;
+            font-family: "Calibri"
+        }
+
+        p {
+            margin: 0;
+            color: #000000;
+            font-size: 11pt;
+            font-family: "Calibri"
+        }
+
+        h1 {
+            padding-top: 24pt;
+            color: #000000;
+            font-weight: 700;
+            font-size: 24pt;
+            padding-bottom: 6pt;
+            font-family: "Calibri";
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        h2 {
+            padding-top: 18pt;
+            color: #000000;
+            font-weight: 700;
+            font-size: 18pt;
+            padding-bottom: 4pt;
+            font-family: "Calibri";
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        h3 {
+            padding-top: 14pt;
+            color: #000000;
+            font-weight: 700;
+            font-size: 14pt;
+            padding-bottom: 4pt;
+            font-family: "Calibri";
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        h4 {
+            padding-top: 12pt;
+            color: #000000;
+            font-weight: 700;
+            font-size: 12pt;
+            padding-bottom: 2pt;
+            font-family: "Calibri";
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        h5 {
+            padding-top: 11pt;
+            color: #000000;
+            font-weight: 700;
+            font-size: 11pt;
+            padding-bottom: 2pt;
+            font-family: "Calibri";
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        h6 {
+            padding-top: 10pt;
+            color: #000000;
+            font-weight: 700;
+            font-size: 10pt;
+            padding-bottom: 2pt;
+            font-family: "Calibri";
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        .fondo-encabezado {
+            background: url('{{headerPath}}') no-repeat left top;
+            background-size: contain;
+            min-height: 200px;
+            padding-top: 120px;
+        }
+
+        .contenido-certificado {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 190px 130px 0px 130px;
+        }
+
+        p {
+            line-height: 1.5;
+        }
+
+        .fondo-footer {
+            background: url('{{footerPath}}') no-repeat left bottom;
+            background-size: contain;
+            min-height: 400px;
+            padding-bottom: 60px;
+        }
+
+        .contenido-footer {
+            max-width: 400px;
+            padding: 0px 130px;
+        }
+
+        .c3,
+        .c0,
+        .c11,
+        .c2,
+        .c12,
+        .c8,
+        .c9,
+        .c4,
+        .c5,
+        .c6,
+        .c7,
+        .c10,
+        .c13,
+        .contenido-certificado,
+        .contenido-footer {
+            font-family: 'Arial Narrow', Arial, sans-serif !important;
+        }
+
+        .c11 {
+            padding-bottom: 8px;
+        }
+    </style>
+</head>
+
+<body class="c13 doc-content">
+    <div class="fondo-encabezado">
+        <div class="contenido-certificado">
+            <p class="c8"><span class="c3">CERTIFICACION LABORAL</span></p>
+            <p class="c4 c7"><span class="c2 c0"></span></p>
+            <p class="c4">
+                <span class="c0">Por medio de la presente certifico que </span>
+                <span class="c3 c1">{{name}}</span>
+                <span class="c0"> identificado con {{documentType}} No. </span>
+                <span class="c3 c1">{{documentNumber}}</span>
+                <span class="C3 c0"> de {{cityDocument}}</span>
+                <span class="c0">, se encuentra vinculado a través de contrato a término indefinido en esta oficina de
+                    abogados </span>
+                <span class="c3">OLFA MARÍA PÉREZ ORELLANOS E HIJOS ABOGADOS S.A.S.</span>
+                <span class="c0"> con NIT. </span>
+                <span class="c3">900.710.007-2</span>
+                <span class="c0"> cuyo objeto social es la prestación de servicios jurídicos profesionales a compañías
+                    aseguradoras, desempeñándose como </span>
+                <span class="c3 c1">{{position}}</span>
+                <span class="c0"> desde el día </span>
+                <span class="c3 c1">{{startDate}}</span>
+                <span class="c0">.</span>
+            </p>
+            <p class="c4 c7"><span class="c2 c0"></span></p>
+            <p class="c4">
+                <span class="c0">Se expide la presente certificación a solicitud del interesado
+                    <span class="c1">a los {{daysCertificationText}} ({{dayCertification}}) días del mes de
+                        {{monthCertification}} de {{yearCertificationText}} ({{yearCertification}})
+                    </span>
+                </span>
+            </p>
+            <p class="c7 c10"><span class="c2 c0"></span></p>
+        </div>
+    </div>
+    <div class="fondo-footer">
+        <div class="contenido-footer">
+            <p class="c9 c11"><span class="c2 c0">Cordialmente, </span></p>
+            <!-- Firma -->
+            <div class="firma">
+                <img src="{{firmaPath}}" alt="Firma">
+            </div>
+            <p class="c9"><span class="c2 c0">{{nameFirmante}}</span></p>
+            <p class="c9"><span class="c2 c0">{{positionFirmante}}</span></p>
+            <p class="c12"><span class="c2 c3">OMP Abogados</span></p>
+        </div>
+    </div>
+</body>
+
+</html>
