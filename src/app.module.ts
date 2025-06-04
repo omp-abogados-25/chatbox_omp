@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { WhatsappWebhookPresentationModule } from './whatsapp-webhook/presentation';
@@ -9,7 +10,13 @@ import { RoleFunctionModule } from './modules/role-functions';
 const presentationModules = [PrismaModule, WhatsappWebhookPresentationModule, PositionModule, RoleFunctionModule];
 
 @Module({
-  imports: presentationModules,
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    ...presentationModules
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

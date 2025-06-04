@@ -1,0 +1,58 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                      String    @id @default(uuid())
+  full_name               String    /// Nombre Completo del usuario
+  identification_number   String    @unique /// Cédula del usuario
+  issuing_place           String    /// Lugar de Expedición de la cédula
+  entry_date              String    /// Fecha de Ingreso del usuario a la empresa
+  salary                  String    /// Salario del usuario
+  transportation_allowance String    /// Auxilio de Transporte del usuario
+
+  positionId String? /// ID del Cargo asignado al usuario (opcional)
+  position   Position? @relation(fields: [positionId], references: [id]) /// Relación con el cargo
+
+  created_at DateTime @default(now()) /// Fecha de creación del registro
+  updated_at DateTime @updatedAt /// Fecha de última actualización del registro
+}
+
+model Position {
+  id          String   @id @default(uuid()) /// Identificador único del cargo (UUID)
+  name        String   @unique /// Nombre del cargo
+  description String?  /// Descripción del cargo (opcional)
+  users       User[]     /// Usuarios que tienen este cargo
+  functions   PositionFunction[] /// Funciones asociadas a este cargo
+
+  created_at DateTime @default(now()) /// Fecha de creación del registro
+  updated_at DateTime @updatedAt /// Fecha de última actualización del registro
+}
+
+model RoleFunction {
+  id      String   @id @default(uuid()) /// Identificador único de la función (UUID)
+  details String   /// Detalles o descripción principal de la función
+  notes   String?  /// Notas o descripción adicional (opcional)
+  positions PositionFunction[] /// Cargos que tienen esta función
+
+  created_at DateTime @default(now()) /// Fecha de creación del registro
+  updated_at DateTime @updatedAt /// Fecha de última actualización del registro
+}
+
+model PositionFunction {
+  id             String       @id @default(uuid()) /// ID único para la relación
+  positionId     String       /// ID del Cargo
+  position       Position     @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  roleFunctionId String       /// ID de la Función
+  roleFunction   RoleFunction @relation(fields: [roleFunctionId], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now()) /// Fecha de creación del registro
+  updated_at DateTime @updatedAt /// Fecha de última actualización del registro
+
+  @@unique([positionId, roleFunctionId]) /// Evita duplicados en la relación
+} 
