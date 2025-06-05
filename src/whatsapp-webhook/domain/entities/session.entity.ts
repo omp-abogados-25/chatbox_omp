@@ -21,6 +21,13 @@ export class Session {
     public mfaSessionId?: string,
     public email?: string,
     public certificateType?: CertificateType,
+    public selectedSalaryTypeKey?: string,
+    public selectedSalaryTypeDisplay?: string,
+    public positionId?: string,
+    public salary?: string,
+    public transportationAllowance?: string,
+    public entryDate?: string,
+    public issuingPlace?: string,
   ) {}
 
   updateActivity(): void {

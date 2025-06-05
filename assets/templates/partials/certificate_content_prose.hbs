@@ -1,0 +1,88 @@
+<p class="c4 c7"><span class="c2 c0"></span></p>
+<p class="c4">
+        <span class="c0">Por medio de la presente certifico que </span>
+        <span class="c3 c1">{{name}}</span>
+        <span class="c0"> identificado con {{documentType}} No. </span>
+        <span class="c3 c1">{{documentNumber}}</span>
+        <span class="c0 c1"> de {{cityDocument}}</span>
+        <span class="c0">, se encuentra vinculado a través de contrato a término indefinido en esta oficina de abogados
+        </span>
+        <span class="c3">OLFA MARÍA PÉREZ ORELLANOS E HIJOS ABOGADOS S.A.S.</span>
+        <span class="c0"> con NIT. </span>
+        <span class="c3">900.710.007-2</span>
+        <span class="c0"> cuyo objeto social es la prestación de servicios jurídicos profesionales a compañías
+                aseguradoras,
+                desempeñándose como </span>
+        <span class="c3 c1">{{position}}</span>
+        <span class="c0"> desde el día </span>
+        <span class="c3 c1">{{startDate}}</span>
+        {{#if salaryInLetters}}
+        <span class="c0">, con una asignación salarial de </span>
+        <span class="c0 c1">{{salaryInLetters}}</span>
+        <span class="c3 c1">({{salaryFormatCurrency}})</span>
+        {{/if}}
+        <span class="c0">.</span>
+</p>
+
+{{#if functions_html_content}}
+{{{functions_html_content}}}
+{{else}}
+<!-- Relleno para plantilla sin sueldo y sin funciones, o si no hay funciones -->
+<!-- Puedes ajustar o eliminar este relleno si prefieres que esta plantilla no lo tenga por defecto -->
+<p class="c4 c7"><span class="c2 c0"></span></p>
+<p class="c4"><span class="c3">FUNCIONES DEL CARGO (EJEMPLO ILUSTRATIVO):</span></p>
+<p class="c4" style="text-align: justify;"><span class="c0" style="font-size: 12pt;">Lorem ipsum dolor sit amet,
+                consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
+                ad minim
+                veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
+                irure dolor
+                in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+                cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</span></p>
+<p class="c4 c7"><span class="c2 c0"></span></p>
+<p class="c4" style="text-align: justify;"><span class="c0" style="font-size: 12pt;">Phasellus faucibus scelerisque
+                eleifend. Donec pretium vulputate sapien nec sagittis. Morbi dapibus augue vel elit interdum, sed
+                suscipit urna
+                placerat. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec
+                pharetra, magna vestibulum aliquet ultrices, nisl massa malesuada nisl, non commodo purus velit nec dui.
+                Proin
+                vitae justo nisl.</span></p>
+<p class="c4 c7"><span class="c2 c0"></span></p>
+<p class="c4" style="text-align: justify;"><span class="c0" style="font-size: 12pt;">Integer accumsan cibus, enim ante
+                ultricies augue, et maximus diam justo et purus. Sed vitae nisi eget nisi ultrices pulvinar. Vivamus
+                suscipit
+                tortor eget felis porttitor volutpat. Nulla quis lorem ut libero malesuada feugiat. Curabitur aliquet
+                quam id
+                dui posuere blandit. Donec sollicitudin molestie malesuada.</span></p>
+<p class="c4 c7"><span class="c2 c0"></span></p>
+<p class="c4" style="text-align: justify;"><span class="c0" style="font-size: 12pt;">Vestibulum ac diam sit amet quam
+                vehicula elementum sed sit amet dui. Mauris blandit aliquet elit, eget tincidunt nibh pulvinar a.
+                Curabitur arcu
+                erat, accumsan id imperdiet et, porttitor at sem. Pellentesque in ipsum id orci porta dapibus. Cras
+                ultricies
+                ligula sed magna dictum porta.</span></p>
+<p class="c4 c7"><span class="c2 c0"></span></p>
+<p class="c4" style="text-align: justify;"><span class="c0" style="font-size: 12pt;">Sed porttitor lectus nibh. Proin
+                eget tortor risus. Donec rutrum congue leo eget malesuada. Curabitur non nulla sit amet nisl tempus
+                convallis
+                quis ac lectus. Vivamus magna justo, lacinia eget consectetur sed, convallis at tellus. Praesent sapien
+                massa,
+                convallis a pellentesque nec, egestas non nisi.</span></p>
+<p class="c4 c7"><span class="c2 c0"></span></p>
+<p class="c4" style="text-align: justify;"><span class="c0" style="font-size: 12pt;">Quisque velit nisi, pretium ut
+                lacinia in, elementum id enim. Nulla porttitor accumsan tincidunt. Donec sollicitudin molestie
+                malesuada. Lorem
+                ipsum dolor sit amet, consectetur adipiscing elit. Cras ultricies ligula sed magna dictum porta. Mauris
+                blandit
+                aliquet elit, eget tincidunt nibh pulvinar a.</span></p>
+<p class="c4 c7"><span class="c2 c0"></span></p>
+{{/if}}
+
+<p class="c4 c7"><span class="c2 c0"></span></p>
+<p class="c4">
+        <span class="c0">Se expide la presente certificación a solicitud del interesado
+                <span class="c1">a los {{daysCertificationText}} ({{dayCertification}}) días del mes de
+                        {{monthCertification}}
+                        de {{yearCertificationText}} ({{yearCertification}})</span>
+        </span>
+</p>
+<p class="c7 c10"><span class="c2 c0"></span></p>

@@ -6,8 +6,10 @@ import { WhatsappWebhookPresentationModule } from './whatsapp-webhook/presentati
 import { PositionModule } from './modules/positions';
 import { PrismaModule } from './integrations/prisma';
 import { RoleFunctionModule } from './modules/role-functions';
+import { PositionFunctionModule } from './modules/position-functions';
+import { UserModule } from './modules/users';
 
-const presentationModules = [PrismaModule, WhatsappWebhookPresentationModule, PositionModule, RoleFunctionModule];
+const presentationModules = [PrismaModule, WhatsappWebhookPresentationModule, PositionModule, RoleFunctionModule, PositionFunctionModule, UserModule];
 
 @Module({
   imports: [

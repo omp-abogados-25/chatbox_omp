@@ -2,25 +2,24 @@ import { Injectable, Logger, Inject } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { IEmailService, EmailOptions } from '../../domain/interfaces/email.interface';
 import { getEmailConfig } from '../config/email.config';
-import * as fs from 'fs/promises'; // Para eliminar el PDF temporal
+import * as fs from 'fs/promises'; 
 import * as path from 'path';
 import { TClient } from 'src/whatsapp-webhook/domain';
 
-// Nuevas importaciones para los servicios refactorizados
 import { TemplateService } from './template.service';
 import { PuppeteerPdfService } from './puppeteer-pdf.service';
 
-// Datos del firmante (pueden ser configurables más adelante)
 const FIRMANTE_NOMBRE = 'Vanessa Marquez Tejera';
 const FIRMANTE_CARGO = 'Coordinadora de Gestión Humana';
 
-// Nombres de las plantillas de certificado
 const CERT_CON_SUELDO_TEMPLATE = 'plantilla_certificado_con_sueldo_sin_funciones.hbs';
 const CERT_SIN_SUELDO_TEMPLATE = 'plantilla_certificado_sin_sueldo_sin_funciones.hbs';
+const CERT_CON_FUNCIONES_TEMPLATE = 'con_funciones.hbs'; 
+const CERT_CON_FUNCIONES_CON_SUELDO_TEMPLATE = 'con_funciones_con_sueldo.hbs'; 
+const CERTIFICATE_CONTENT_PROSE_TEMPLATE = 'partials/certificate_content_prose.hbs';
+const REPEATING_PAGE_SHELL_TEMPLATE = 'repeating_page_shell.hbs';
 const CERTIFICATE_EMAIL_TEMPLATE = 'email/certificate_dispatch_email.hbs';
 
-// Rutas relativas a imágenes para pasar a la plantilla del certificado
-// Se asume que la carpeta 'assets' está en la raíz del proyecto.
 const HEADER_IMAGE_PATH_RELATIVE = 'assets/images/image2.jpg';
 const FOOTER_IMAGE_PATH_RELATIVE = 'assets/images/image1.jpg';
 const FIRMA_IMAGE_PATH_RELATIVE = 'assets/images/firma.png';
@@ -32,8 +31,8 @@ export class NodemailerEmailService implements IEmailService {
   private transporter: nodemailer.Transporter;
 
   constructor(
-    private readonly templateService: TemplateService, // Inyectado
-    private readonly puppeteerPdfService: PuppeteerPdfService, // Inyectado
+    private readonly templateService: TemplateService, 
+    private readonly puppeteerPdfService: PuppeteerPdfService, 
   ) {
     this.initializeTransporter();
   }
@@ -69,7 +68,7 @@ export class NodemailerEmailService implements IEmailService {
       this.logger.log(`Email sent successfully to ${options.to}. MessageId: ${result.messageId}`);
       return true;
     } catch (error) {
-      this.logger.error(`Failed to send email to ${options.to}:`, error);
+      this.logger.error(`Failed to send email to ${options.to}. Message: ${error.message}`, error.stack);
       return false;
     }
   }
@@ -117,10 +116,9 @@ export class NodemailerEmailService implements IEmailService {
     };
   }
 
-  // Función auxiliar para formatear el número de documento
   private formatDocumentNumber(documentNumber: string): string {
     if (!documentNumber) return '';
-    const numStr = String(documentNumber).replace(/\D/g, ''); // Eliminar no dígitos por si acaso
+    const numStr = String(documentNumber).replace(/\D/g, ''); 
     if (numStr.length <= 3) return numStr;
     
     let formattedNum = '';
@@ -136,66 +134,167 @@ export class NodemailerEmailService implements IEmailService {
     return formattedNum;
   }
 
-  async sendCertificateEmail(to: string, clientData: TClient, certificateType: string, chatTranscription: string): Promise<boolean> {
+  private formatDateToText(dateString: string | null | undefined): string {
+    if (!dateString) {
+      this.logger.warn('[NodemailerEmailService] formatDateToText recibió una fecha nula o indefinida.');
+      return 'FECHA NO ESPECIFICADA';
+    }
+    try {
+      const date = new Date(dateString + 'T00:00:00');
+
+      if (isNaN(date.getTime())) {
+        this.logger.warn(`[NodemailerEmailService] La fecha '${dateString}' no pudo ser parseada correctamente.`);
+        return dateString; 
+      }
+
+      const day = date.getDate();
+      const monthIndex = date.getMonth();
+      const year = date.getFullYear();
+
+      const monthNames = [
+        "enero", "febrero", "marzo", "abril", "mayo", "junio",
+        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+      ];
+
+      return `${day} de ${monthNames[monthIndex]} de ${year}`;
+    } catch (error) {
+      this.logger.error(`[NodemailerEmailService] Error formateando la fecha '${dateString}':`, error);
+      return dateString; 
+    }
+  }
+
+  async sendCertificateEmail(
+    to: string, 
+    clientData: TClient, 
+    certificateType: string, 
+    chatTranscription: string,
+    functionCategories?: Array<{ categoryName: string; functions: string[] }>,
+  ): Promise<boolean> {
     let tempPdfFilePath: string | null = null;
-    // Determinar la plantilla de certificado a usar
-    // Asumo que certificateType será 'con_sueldo' o 'sin_sueldo'. Ajustar si es diferente.
-    const certificateTemplateName = certificateType.toLowerCase().includes('sin_sueldo') 
-      ? CERT_SIN_SUELDO_TEMPLATE 
-      : CERT_CON_SUELDO_TEMPLATE;
-    
-    this.logger.log(`Selected certificate template: ${certificateTemplateName}`);
+    this.logger.log(`[NodemailerEmailService] Iniciando sendCertificateEmail. Tipo: ${certificateType}`);
+    this.logger.log(`[NodemailerEmailService] Categorías de funciones recibidas: ${JSON.stringify(functionCategories, null, 2)}`);
 
     try {
-      const { 
-        diasCertificacionTexto, 
-        diaCertificacion, 
-        mesCertificacion, 
-        anioCertificacionTexto, 
+      const {
+        diasCertificacionTexto,
+        diaCertificacion,
+        mesCertificacion,
+        anioCertificacionTexto,
         anioCertificacion,
         currentDateFormatted
       } = this.getFormattedCertificateDates();
       
       const currentTime = new Date().toLocaleTimeString('es-CO');
-      const projectRootDir = path.resolve(__dirname, '../../../../'); // Raíz del proyecto
+      const projectRootDir = path.resolve(__dirname, '../../../../');
+      const fontsBaseFileUrl = `file:///${path.resolve(projectRootDir, 'assets/fonts').replace(/\\/g, '/')}`;
+      const headerImageFileUrl = `file:///${path.resolve(projectRootDir, HEADER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
+      const footerImageFileUrl = `file:///${path.resolve(projectRootDir, FOOTER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
+      const firmaImageFileUrl = `file:///${path.resolve(projectRootDir, FIRMA_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
+      const logoOmpForEmailPath = path.resolve(projectRootDir, LOGO_OMP_PATH_RELATIVE); 
 
-      // Construir rutas absolutas file:/// para las imágenes
-      const headerImagePathAbsolute = `file:///${path.resolve(projectRootDir, HEADER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
-      const footerImagePathAbsolute = `file:///${path.resolve(projectRootDir, FOOTER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
-      const firmaImagePathAbsolute = `file:///${path.resolve(projectRootDir, FIRMA_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
-      const logoOmpAbsolutePath = path.resolve(projectRootDir, LOGO_OMP_PATH_RELATIVE);
+      this.logger.debug(`Fonts Base URL: ${fontsBaseFileUrl}`);
+      this.logger.debug(`Header Image URL: ${headerImageFileUrl}`);
+      this.logger.debug(`Footer Image URL: ${footerImageFileUrl}`);
+      this.logger.debug(`Firma Image URL: ${firmaImageFileUrl}`);
 
-      // Aplicar transformaciones a los datos del cliente
       const formattedClientData = {
         ...clientData,
         name: clientData.name ? clientData.name.toUpperCase() : '',
         documentNumber: this.formatDocumentNumber(clientData.documentNumber),
+        startDate: this.formatDateToText(clientData.startDate),
       };
 
-      const certificatePdfData = {
-        ...formattedClientData,
-        daysCertificationText: diasCertificacionTexto,
-        dayCertification: diaCertificacion,
-        monthCertification: mesCertificacion,
-        yearCertificationText: anioCertificacionTexto,
-        yearCertification: anioCertificacion,
-        nameFirmante: FIRMANTE_NOMBRE,
-        positionFirmante: FIRMANTE_CARGO,
-        // Rutas de imágenes para la plantilla del certificado
-        headerPath: headerImagePathAbsolute,
-        footerPath: footerImagePathAbsolute,
-        firmaPath: firmaImagePathAbsolute,
-      };
-      
-      this.logger.log('Generating certificate HTML content...');
-      this.logger.debug('Certificate PDF data (transformed):', JSON.stringify(certificatePdfData, null, 2));
-      const certificateHtmlContent = await this.templateService.compileCertificateTemplate(
-        certificateTemplateName,
-        certificatePdfData
-      );
+      let finalHtmlForPdf = '';
+
+      const isConFuncionesType = certificateType.toLowerCase().includes('con_funciones');
+      const isConSueldoType = certificateType.toLowerCase().includes('con_sueldo');
+
+      if (isConFuncionesType) {
+        let plantillaSeleccionada = CERT_CON_FUNCIONES_TEMPLATE; 
+        if (isConSueldoType) {
+          plantillaSeleccionada = CERT_CON_FUNCIONES_CON_SUELDO_TEMPLATE; 
+        }
+        this.logger.log(`Processing '${certificateType}' con funciones. Plantilla: ${plantillaSeleccionada}`);
+
+        const templateDataForConFunciones = {
+          ...formattedClientData,
+          daysCertificationText: diasCertificacionTexto,
+          dayCertification: diaCertificacion,
+          monthCertification: mesCertificacion,
+          yearCertificationText: anioCertificacionTexto,
+          yearCertification: anioCertificacion,
+          startDate: formattedClientData.startDate,
+          cityDocument: clientData.cityDocument,
+          ...(isConSueldoType ? { 
+              salaryInLetters: (clientData as any).salaryInLetters, 
+              salaryFormatCurrency: (clientData as any).salaryFormatCurrency,
+              transportationAllowanceInLetters: (clientData as any).transportationAllowanceInLetters,
+              transportationAllowanceFormatCurrency: (clientData as any).transportationAllowanceFormatCurrency
+          } : {}),
+          fontsBaseUrl: fontsBaseFileUrl,
+          headerImageFileUrl: headerImageFileUrl,
+          footerImageFileUrl: footerImageFileUrl,
+          firmaImageFileUrl: firmaImageFileUrl,
+          nameFirmante: FIRMANTE_NOMBRE,
+          positionFirmante: FIRMANTE_CARGO,
+          functionCategories: functionCategories, 
+        };
+
+        finalHtmlForPdf = await this.templateService.compileTemplate(
+          plantillaSeleccionada,
+          templateDataForConFunciones,
+          'assets/templates'
+        );
+        this.logger.log('HTML para certificado "con funciones" compilado.');
+
+      } else { 
+        let plantillaSeleccionada = CERT_SIN_SUELDO_TEMPLATE; 
+        if (isConSueldoType) {
+          plantillaSeleccionada = CERT_CON_SUELDO_TEMPLATE; 
+        }
+        this.logger.log(`Processing '${certificateType}' sin funciones. Plantilla: ${plantillaSeleccionada}`);
+        
+        const templateDataSinFunciones = {
+          ...formattedClientData,
+          daysCertificationText: diasCertificacionTexto,
+          dayCertification: diaCertificacion,
+          monthCertification: mesCertificacion,
+          yearCertificationText: anioCertificacionTexto,
+          yearCertification: anioCertificacion,
+          startDate: formattedClientData.startDate,
+          cityDocument: clientData.cityDocument,
+          ...(isConSueldoType ? { 
+              salaryInLetters: (clientData as any).salaryInLetters, 
+              salaryFormatCurrency: (clientData as any).salaryFormatCurrency,
+              transportationAllowanceInLetters: (clientData as any).transportationAllowanceInLetters,
+              transportationAllowanceFormatCurrency: (clientData as any).transportationAllowanceFormatCurrency
+          } : {}),
+          fontsBaseUrl: fontsBaseFileUrl,
+          headerImageFileUrl: headerImageFileUrl,
+          footerImageFileUrl: footerImageFileUrl,
+          firmaImageFileUrl: firmaImageFileUrl,
+          nameFirmante: FIRMANTE_NOMBRE,
+          positionFirmante: FIRMANTE_CARGO,
+        };
+        
+        finalHtmlForPdf = await this.templateService.compileTemplate(
+          plantillaSeleccionada,
+          templateDataSinFunciones,
+          'assets/templates'
+        );
+        this.logger.log('HTML para certificado "sin funciones" compilado directamente desde plantilla completa.');
+      }
+
+      if (!finalHtmlForPdf) {
+        this.logger.error('HTML for certificate compilation is empty.');
+        return false;
+      }
 
       this.logger.log('Generating certificate PDF file with PuppeteerService...');
-      tempPdfFilePath = await this.puppeteerPdfService.generatePdfFromHtml(certificateHtmlContent);
+      tempPdfFilePath = await this.puppeteerPdfService.generatePdfFromHtml(
+        finalHtmlForPdf,
+        { format: 'Letter', printBackground: true, preferCSSPageSize: true, displayHeaderFooter: false }
+      );
       this.logger.log(`Certificate PDF generated successfully at: ${tempPdfFilePath}`);
       
       const transcriptionTxt = this.generateTranscriptionFile(chatTranscription, currentDateFormatted, currentTime);
@@ -227,7 +326,7 @@ export class NodemailerEmailService implements IEmailService {
           },
           {
             filename: 'logo-omp.png',
-            path: logoOmpAbsolutePath,
+            path: logoOmpForEmailPath, 
             cid: 'logo_omp_cert@ompabogados.com'
           }
         ]

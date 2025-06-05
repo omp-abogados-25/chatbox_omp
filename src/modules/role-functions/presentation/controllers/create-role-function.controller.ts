@@ -27,8 +27,13 @@ export class CreateRoleFunctionController {
   @ApiOperation({ summary: 'Crear una nueva función de rol', description: 'Registra una nueva función de rol en el sistema.' })
   @ApiCreatedResponse({ description: 'La función de rol ha sido creada exitosamente.', type: RoleFunctionResponseDto })
   @ApiBadRequestResponse({ description: 'Los datos proporcionados para crear la función de rol son inválidos.' })
-  async create(@Body() createRoleFunctionDto: CreateRoleFunctionRequestDto): Promise<RoleFunctionResponseDto> {
-    const newRoleFunctionDomain = await this.createRoleFunctionUseCase.execute(createRoleFunctionDto);
+  async create(@Body() createRoleFunctionDto: CreateRoleFunctionRequestDto[]): Promise<RoleFunctionResponseDto> {
+    // const newRoleFunctionDomain = await this.createRoleFunctionUseCase.execute(createRoleFunctionDto);
+    // return mapDomainToResponseDto(newRoleFunctionDomain);
+    let newRoleFunctionDomain;
+    for (const roleFunction of createRoleFunctionDto) {
+      newRoleFunctionDomain = await this.createRoleFunctionUseCase.execute(roleFunction);
+    }
     return mapDomainToResponseDto(newRoleFunctionDomain);
   }
 } 

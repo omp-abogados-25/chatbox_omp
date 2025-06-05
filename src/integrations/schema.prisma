@@ -13,6 +13,7 @@ model User {
   identification_number   String    @unique /// Cédula del usuario
   issuing_place           String    /// Lugar de Expedición de la cédula
   entry_date              String    /// Fecha de Ingreso del usuario a la empresa
+  email                   String    @unique /// Correo electrónico del usuario
   salary                  String    /// Salario del usuario
   transportation_allowance String    /// Auxilio de Transporte del usuario
 

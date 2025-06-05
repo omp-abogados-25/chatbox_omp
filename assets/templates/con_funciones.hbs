@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style type="text/css">
+        * {
+            font-family: 'Arial Narrow', Arial, sans-serif !important;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @font-face {
+            font-family: 'Arial Narrow';
+            src: url('{{fontsBaseUrl}}/arialnarrow.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Arial Narrow';
+            src: url('{{fontsBaseUrl}}/arialnarrow_bold.ttf') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Arial Narrow';
+            src: url('{{fontsBaseUrl}}/arialnarrow_italic.ttf') format('truetype');
+            font-weight: normal;
+            font-style: italic;
+        }
+
+        @font-face {
+            font-family: 'Arial Narrow';
+            src: url('{{fontsBaseUrl}}/arialnarrow_bolditalic.ttf') format('truetype');
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        ol {
+            margin: 0;
+            padding: 0
+        }
+
+        table td,
+        table th {
+            padding: 0
+        }
+
+        body {
+            background-color: #f0f0f0;
+            /* Un fondo para distinguir las páginas */
+        }
+
+        .pagina-documento {
+            width: 970.67px;
+            height: 1168.67px;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+            page-break-after: always;
+            position: relative;
+        }
+
+        .seccion-encabezado-fija {
+            background: url('{{headerImageFileUrl}}') no-repeat left top;
+            background-size: 100% 100%;
+            height: 550px;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .seccion-cuerpo-pagina {
+            padding: 180px 140px 80px 140px;
+            overflow: visible;
+            position: relative;
+            z-index: 2;
+            flex-grow: 1;
+        }
+
+        .seccion-contenido-firma {
+            height: 548px;
+            flex-shrink: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding-left: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .fondo-grafico-pie {
+            background: url('{{footerImageFileUrl}}') no-repeat left bottom;
+            background-size: contain;
+            height: 548px;
+            width: 100%;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .contenido-footer {
+            max-width: 400px;
+        }
+
+        .contenido-footer>p:last-child,
+        .contenido-footer>div:last-child>p:last-child {
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+
+        /* Estilos de texto preexistentes (c0 a c12, etc.) */
+        .c5 {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            orphans: 2;
+            widows: 2;
+            text-align: justify;
+        }
+
+        .c6 {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            orphans: 2;
+            widows: 2;
+            text-align: justify;
+        }
+
+        .c9 {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        .c12 {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            orphans: 2;
+            widows: 2;
+            text-align: justify;
+        }
+
+        .c4 {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            orphans: 2;
+            widows: 2;
+            text-align: justify
+        }
+
+        .c4:not(:last-child) {
+            margin-bottom: 1em;
+        }
+
+        .c10 {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            orphans: 2;
+            widows: 2;
+            text-align: justify
+        }
+
+        .c8 {
+            padding-bottom: 20pt;
+            line-height: 1.5;
+            orphans: 2;
+            widows: 2;
+            text-align: center
+        }
+
+        .c2 {
+            color: #000000;
+            text-decoration: none;
+            vertical-align: baseline;
+            font-style: normal
+        }
+
+        .c11 {
+            font-weight: 400;
+            font-size: 11pt;
+            padding-bottom: 8px;
+        }
+
+        .c3 {
+            font-weight: 700;
+            font-size: 14pt;
+        }
+
+        .c0 {
+            font-size: 14pt;
+            font-weight: 400;
+        }
+
+        /* Nuevo estilo para c0 dentro de listas */
+        li .c0 {
+            font-size: 12pt;
+        }
+
+        .c7 {
+            height: 1em;
+        }
+
+        .firma {
+            margin-bottom: 8px;
+            height: 80px;
+        }
+
+        .firma img {
+            height: 100%;
+            width: auto;
+        }
+
+
+        /* Estilos de título/subtítulo genéricos (probablemente no usados directamente aquí) */
+        .title {
+            padding-top: 24pt;
+            color: #000000;
+            font-weight: 700;
+            font-size: 36pt;
+            padding-bottom: 6pt;
+            font-family: "Calibri";
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        .subtitle {
+            padding-top: 18pt;
+            color: #666666;
+            font-size: 24pt;
+            padding-bottom: 4pt;
+            font-family: "Georgia";
+            line-height: 1.5;
+            page-break-after: avoid;
+            font-style: italic;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        li {
+            color: #000000;
+            font-size: 11pt;
+            font-family: "Calibri"
+        }
+
+        p {
+            margin: 0;
+            color: #000000;
+            font-size: 11pt;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: #000000;
+            font-weight: 700;
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: left;
+        }
+
+        h1 {
+            padding-top: 24pt;
+            font-size: 24pt;
+            padding-bottom: 6pt;
+        }
+
+        h2 {
+            padding-top: 18pt;
+            font-size: 18pt;
+            padding-bottom: 4pt;
+        }
+
+        h3 {
+            padding-top: 14pt;
+            font-size: 14pt;
+            padding-bottom: 4pt;
+        }
+
+        h4 {
+            padding-top: 12pt;
+            font-size: 12pt;
+            padding-bottom: 2pt;
+        }
+
+        h5 {
+            padding-top: 11pt;
+            font-size: 11pt;
+            padding-bottom: 2pt;
+        }
+
+        h6 {
+            padding-top: 10pt;
+            font-size: 10pt;
+            padding-bottom: 2pt;
+        }
+
+        /* Estilos específicos para impresión */
+        @media print {
+            body {
+                background-color: #ffffff;
+                /* Fondo blanco para impresión */
+            }
+
+            .pagina-documento {
+                margin: 0;
+                /* Sin márgenes externos en la hoja de papel */
+                box-shadow: none !important;
+                /* Sin sombra en la impresión */
+                page-break-after: always;
+                /* Intento de salto de página */
+            }
+        }
+
+        .firma-oculta {
+            display: none !important;
+        }
+
+        .seccion-contenido-firma-dinamica {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Clases genéricas para texto y listas */
+        .c4,
+        .c7,
+        .c9,
+        .c10,
+        .c12,
+        .c14,
+        .c15,
+        .c17,
+        .c18 {
+            font-family: 'Arial Narrow', Arial, sans-serif !important;
+            font-size: 11pt;
+            line-height: 1.15;
+            margin-bottom: 0.4em;
+        }
+
+        .c7,
+        .c17,
+        .c18 {
+            font-weight: bold;
+            padding: 1px 3px;
+            margin-top: 0.6em;
+            margin-bottom: 0.5em;
+        }
+
+        .c15 {
+            font-weight: bold;
+        }
+
+        ul[class^="lst-kix_list_"] {
+            font-family: 'Arial Narrow', Arial, sans-serif !important;
+            font-size: 11pt;
+            line-height: 1.15;
+            list-style-type: none;
+            list-style-position: outside;
+            margin-left: 60px;
+            padding-left: 0px;
+            margin-bottom: 0.6em;
+        }
+
+        ul {
+            padding-left: 25px;
+        }
+
+        li {
+            list-style: none;
+        }
+
+        li[class*="li-bullet-"] {
+            margin-top: 0.1em;
+            margin-bottom: 0.15em;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        li[class*="li-bullet-"]::before {
+            content: "●";
+            font-weight: 900;
+            font-size: 14pt;
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            color: #000000;
+        }
+
+        .c-bineta-nombre {
+            font-weight: 900;
+            font-size: 18px;
+        }
+
+        .sin-color {
+            background-color: transparent;
+        }
+
+        /* Fin nuevas clases */
+    </style>
+</head>
+
+<body>
+
+    <!-- Página 1 -->
+    <div class="pagina-documento">
+        <div class="seccion-encabezado-fija"></div>
+        <div class="seccion-cuerpo-pagina">
+            <p class="c8"><span class="c3">CERTIFICACION LABORAL</span></p>
+            <p class="c4">
+                <span class="c0">Por medio de la presente certifico que </span>
+                <span class="c3 c1">{{name}}</span>
+                <span class="c0"> identificado con {{documentType}} No. </span>
+                <span class="c3 c1">{{documentNumber}}</span>
+                <span class="c0"> de {{cityDocument}}</span>
+                <span class="c0">, se encuentra vinculado a trav&eacute;s de contrato a t&eacute;rmino indefinido en
+                    esta oficina de
+                    abogados </span>
+                <span class="c3">OLFA MAR&Iacute;A P&Eacute;REZ ORELLANOS E HIJOS ABOGADOS S.A.S.</span>
+                <span class="c0"> con NIT. </span>
+                <span class="c3">900.710.007-2</span>
+                <span class="c0"> cuyo objeto social es la prestaci&oacute;n de servicios jur&iacute;dicos
+                    profesionales
+                    a compa&ntilde;&iacute;as
+                    aseguradoras, desempe&ntilde;&aacute;ndose como </span>
+                <span class="c3 c1">{{position}}</span>
+                <span class="c0"> desde el d&iacute;a </span>
+                <span class="c3 c1">{{startDate}}</span>
+                <span class="c0">.</span>
+            </p>
+            <p class=""><span class="c0">A continuaci&oacute;n, se describen las funciones que desempe&ntilde;a en
+                    el
+                    cargo:</span></p>
+            {{#if functionCategories}}
+            {{#each functionCategories}}
+            <p class="c17"><span class="c8 c-bineta-nombre">{{this.categoryName}}</span></p>
+            <ul class="c2 lst-kix_list_12-0">
+                {{#each this.functions}}
+                <li class="c5 li-bullet-0"><span class="c0">{{this}}</span></li>
+                {{/each}}
+            </ul>
+            {{/each}}
+            {{else}}
+            <p><span class="c0">No se especificaron funciones para este cargo.</span></p>
+            {{/if}}
+            <p class="c6"><span class="c0"></span></p>
+            <p class="c14"><span class="c4">Adicionalmente, se certifica que dentro de su ejercicio profesional
+                    en</span><span class="c1">&nbsp;OMP ABOGADOS</span><span class="c0">&nbsp;ha manejado y
+                    gestionado:
+                </span></p>
+            <ul class="c2 lst-kix_list_8-0 start">
+                <li class="c9 li-bullet-0"><span class="c0">Procesos de </span><span class="c1 c8">responsabilidad
+                        fiscal</span><span class="c0">&nbsp;y </span><span class="c8 c1">procesos administrativos
+                        sancionatorios</span><span class="c0">&nbsp;ante entes de control, garantizando el
+                        cumplimiento
+                        de los
+                        lineamientos jur&iacute;dicos aplicables y participando en la representaci&oacute;n y
+                        defensa de
+                        los
+                        intereses de los clientes en estas actuaciones.</span></li>
+            </ul>
+
+            <p class="c4 c7"><span class="c2 c0"></span></p>
+            <p class="c4">
+                <span class="c0">Se expide la presente certificaci&oacute;n a solicitud del interesado
+                    <span class="c1">a los {{daysCertificationText}} ({{dayCertification}}) d&iacute;as del mes de
+                        {{monthCertification}} de {{yearCertificationText}} ({{yearCertification}})
+                    </span>
+                </span>
+            </p>
+            <p class="c7 c10"><span class="c2 c0"></span></p>
+
+
+        </div>
+        <div class="fondo-grafico-pie"></div>
+    </div>
+
+    <!-- Páginas 2 a 20 (esqueleto) -->
+    <script>
+        // Script para generar las 19 páginas restantes (del 2 al 20)
+        const body = document.querySelector('body');
+        for (let i = 2; i <= 20; i++) {
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'pagina-documento';
+            // Estructura interna de cada página generada SIN la sección de firma
+            pageDiv.innerHTML = `
+            <div class="seccion-encabezado-fija"></div>
+            <div class="seccion-cuerpo-pagina">
+                <!-- Contenido de la página ${i} irá aquí (manejado por tu JS de flujo) -->
+            </div>
+            <!-- La sección de la firma ha sido eliminada de la plantilla -->
+            <div class="fondo-grafico-pie"></div> <!-- El fondo gráfico del pie se mantiene -->
+        `;
+            body.appendChild(pageDiv);
+        }
+    </script>
+
+    <script>
+        // El script anterior se reemplaza completamente por este para asegurar su integridad:
+        document.addEventListener('DOMContentLoaded', function () {
+            const signatureInnerHtml = `
+        <p class="c9 c11"><span class="c2 c0">Cordialmente, </span></p>
+        <div class="firma">
+            <img src="{{firmaImageFileUrl}}" alt="Firma OMP Abogados">
+        </div>
+        <p class="c9 c11"><span class="c2 c0">{{nameFirmante}}</span></p>
+        <p class="c9 c11"><span class="c2 c0">{{positionFirmante}}</span></p>
+        <p class="c12"><span class="c2 c3">OMP Abogados</span></p>
+    `;
+
+            function countRenderedLinesInContainer(container) {
+                let lines = 0;
+                if (!container) return 0;
+                const childrenToCount = Array.from(container.children).filter(el => !el.classList.contains('seccion-contenido-firma-dinamica'));
+
+                for (const element of childrenToCount) {
+                    if (element.style.display === 'none' && !element.dataset.toBeMoved) continue;
+
+                    if (element.tagName === 'UL') {
+                        lines += 1; // Sigue contando UL como 1 línea para la lógica de firma
+                        // console.log(`countRenderedLines: UL encontrado, contando como 1 línea marcador.`);
+                        continue;
+                    }
+
+                    const style = window.getComputedStyle(element);
+                    let lineHeight = parseFloat(style.lineHeight);
+                    const fontSize = parseFloat(style.fontSize);
+                    if (isNaN(lineHeight) && style.lineHeight === 'normal') lineHeight = fontSize * 1.5;
+                    else if (!isNaN(fontSize) && style.lineHeight.match(/^[0-9.]+$/)) lineHeight = fontSize * parseFloat(style.lineHeight);
+                    if (isNaN(lineHeight) || lineHeight === 0) lineHeight = 22;
+
+                    lines += Math.ceil(element.offsetHeight / lineHeight);
+                }
+                return lines;
+            }
+
+            const allPages = document.querySelectorAll('.pagina-documento');
+            const LINE_LIMIT_FOR_OVERFLOW_CONFIG = 45; // Aumentado de 38 a 41
+            const TEXT_AVERAGE_LINE_HEIGHT_PX = 19;
+            const PAGE_MAX_CONTENT_HEIGHT_PX = LINE_LIMIT_FOR_OVERFLOW_CONFIG * TEXT_AVERAGE_LINE_HEIGHT_PX; // Ahora será 41 * 19 = 779px
+            const UL_BASE_HEIGHT_COST_PX = 5;
+
+            let pageIndexOfLastPopulatedPage = 0;
+
+            for (let currentPageIdx = 0; currentPageIdx < allPages.length - 1; currentPageIdx++) {
+                const currentPageDiv = allPages[currentPageIdx];
+                const nextPageDiv = allPages[currentPageIdx + 1];
+                const currentBodyContainer = currentPageDiv.querySelector('.seccion-cuerpo-pagina');
+                const nextBodyContainer = nextPageDiv.querySelector('.seccion-cuerpo-pagina');
+
+                if (!currentBodyContainer || !nextBodyContainer) {
+                    console.warn(`Cuerpo no encontrado en Pág ${currentPageIdx + 1} o Pág ${currentPageIdx + 2}. Deteniendo flujo.`);
+                    pageIndexOfLastPopulatedPage = currentPageIdx;
+                    break;
+                }
+
+                Array.from(currentBodyContainer.children).forEach(el => { if (el.dataset.toBeMoved) el.style.display = ''; });
+
+                let heightConsumedOnPagePx = 0;
+                let overflowTriggeredThisPage = false;
+                const elementsToMoveFromThisPage = [];
+                const childrenToProcess = Array.from(currentBodyContainer.children);
+
+                console.log(`Pág ${currentPageIdx + 1}: Iniciando flujo. Límite de altura: ${PAGE_MAX_CONTENT_HEIGHT_PX}px.`);
+
+                for (const element of childrenToProcess) {
+                    if (element.classList.contains('seccion-contenido-firma-dinamica')) continue;
+
+                    if (overflowTriggeredThisPage) {
+                        element.dataset.toBeMoved = true;
+                        elementsToMoveFromThisPage.push(element);
+                        continue;
+                    }
+
+                    if (element.tagName === 'UL') {
+                        let ulHeightConsumedThisPage = UL_BASE_HEIGHT_COST_PX;
+                        let availableHeightForLIs = PAGE_MAX_CONTENT_HEIGHT_PX - (heightConsumedOnPagePx + ulHeightConsumedThisPage);
+
+                        if (heightConsumedOnPagePx + ulHeightConsumedThisPage > PAGE_MAX_CONTENT_HEIGHT_PX && heightConsumedOnPagePx > 0) {
+                            console.log(`UL (costo base ${UL_BASE_HEIGHT_COST_PX}px) no cabe. Moviendo UL completo. Altura consumida: ${heightConsumedOnPagePx}px`);
+                            overflowTriggeredThisPage = true;
+                            element.dataset.toBeMoved = true;
+                            elementsToMoveFromThisPage.push(element);
+                            continue;
+                        }
+
+                        const listItems = Array.from(element.children);
+                        const originalLiCount = listItems.length;
+                        let movedLiCount = 0;
+                        let firstLiOfPotentialSplit = null;
+
+                        for (let i = 0; i < listItems.length; i++) {
+                            const listItem = listItems[i];
+                            if (listItem.tagName !== 'LI') continue;
+                            const listItemHeight = listItem.offsetHeight;
+
+                            if (overflowTriggeredThisPage || listItemHeight > availableHeightForLIs) {
+                                if (!overflowTriggeredThisPage) {
+                                    console.log(`LI (alto: ${listItemHeight}px) no cabe en ${availableHeightForLIs.toFixed(0)}px disponibles. Marcando para mover.`);
+                                }
+                                overflowTriggeredThisPage = true;
+                                listItem.dataset.toBeMovedLi = true;
+                                movedLiCount++;
+                                if (!firstLiOfPotentialSplit) firstLiOfPotentialSplit = listItem;
+                            } else {
+                                availableHeightForLIs -= listItemHeight;
+                                ulHeightConsumedThisPage += listItemHeight;
+                                delete listItem.dataset.toBeMovedLi;
+                                console.log(`LI (alto: ${listItemHeight}px) cabe. Quedan ${availableHeightForLIs.toFixed(0)}px. Altura UL actual: ${ulHeightConsumedThisPage}px`);
+                            }
+                        }
+                        heightConsumedOnPagePx += ulHeightConsumedThisPage;
+                        console.log(`UL procesado. Altura total consumida en página: ${heightConsumedOnPagePx}px.`);
+
+                        if (movedLiCount > 0) {
+                            if (movedLiCount === originalLiCount || (firstLiOfPotentialSplit === listItems.find(li => li.tagName === 'LI'))) {
+                                console.log('Moviendo UL completo porque todos sus LIs o el primer LI necesita moverse.');
+                                element.dataset.toBeMoved = true;
+                                if (!elementsToMoveFromThisPage.includes(element)) elementsToMoveFromThisPage.push(element);
+                                listItems.forEach(li => delete li.dataset.toBeMovedLi);
+                                heightConsumedOnPagePx -= ulHeightConsumedThisPage; // No consumió espacio si se mueve entero
+                                if (element.dataset.toBeMoved && UL_BASE_HEIGHT_COST_PX > 0 && heightConsumedOnPagePx >= UL_BASE_HEIGHT_COST_PX) {
+                                    // This case is tricky; if UL base cost was added and UL moves, it should be reverted
+                                    // But it was part of ulHeightConsumedThisPage which is already subtracted.
+                                }
+                            } else {
+                                const newUlForNextPage = document.createElement('ul');
+                                element.classList.forEach(cls => newUlForNextPage.classList.add(cls));
+                                listItems.forEach(li => {
+                                    if (li.dataset.toBeMovedLi) {
+                                        newUlForNextPage.appendChild(li);
+                                        delete li.dataset.toBeMovedLi;
+                                    }
+                                });
+                                if (newUlForNextPage.children.length > 0) {
+                                    console.log(`Creando nuevo UL con ${newUlForNextPage.children.length} LIs para pág siguiente.`);
+                                    elementsToMoveFromThisPage.push(newUlForNextPage);
+                                }
+                            }
+                        }
+                    } else { // Elemento NO es UL
+                        const elementHeight = element.offsetHeight;
+                        if (heightConsumedOnPagePx + elementHeight > PAGE_MAX_CONTENT_HEIGHT_PX && heightConsumedOnPagePx > 0) {
+                            // El heightConsumedOnPagePx > 0 asegura que si el primer elemento ya es muy grande, se intente mostrar.
+                            console.log(`Elemento ${element.tagName} (alto: ${elementHeight}px) no cabe. Moviendo. Altura consumida: ${heightConsumedOnPagePx}px`);
+                            overflowTriggeredThisPage = true;
+                            element.dataset.toBeMoved = true;
+                            elementsToMoveFromThisPage.push(element);
+                        } else {
+                            heightConsumedOnPagePx += elementHeight;
+                            delete element.dataset.toBeMoved;
+                            console.log(`Elemento ${element.tagName} (alto: ${elementHeight}px) cabe. Altura consumida: ${heightConsumedOnPagePx}px`);
+                        }
+                    }
+                }
+
+                if (elementsToMoveFromThisPage.length > 0) {
+                    elementsToMoveFromThisPage.forEach(el => {
+                        // El appendChild moverá el elemento si ya está en el DOM
+                        nextBodyContainer.appendChild(el);
+                        delete el.dataset.toBeMoved; // Limpiar la marca después de mover
+                    });
+                    console.log(`${elementsToMoveFromThisPage.length} elementos/fragmentos de lista movidos de Pág ${currentPageIdx + 1} a Pág ${currentPageIdx + 2}.`);
+                    pageIndexOfLastPopulatedPage = currentPageIdx + 1;
+                } else {
+                    pageIndexOfLastPopulatedPage = currentPageIdx;
+                    console.log(`Pág ${currentPageIdx + 1} no desbordó o todo cupo. Deteniendo flujo.`);
+                    break;
+                }
+            }
+            console.log('Flujo de contenido principal completado.');
+
+            // Lógica de la firma (sin cambios, sigue usando countRenderedLinesInContainer)
+            if (allPages.length === 1) pageIndexOfLastPopulatedPage = 0;
+
+            const finalActiveBodyContainer = allPages[pageIndexOfLastPopulatedPage] ? allPages[pageIndexOfLastPopulatedPage].querySelector('.seccion-cuerpo-pagina') : null;
+            let targetContainerForSignature = finalActiveBodyContainer;
+            let finalPageIdxForSignature = pageIndexOfLastPopulatedPage;
+
+            if (finalActiveBodyContainer) {
+                allPages.forEach(p => {
+                    const oldSig = p.querySelector('.seccion-contenido-firma-dinamica');
+                    if (oldSig) oldSig.remove();
+                });
+
+                const linesInCurrentFinalContainer = countRenderedLinesInContainer(targetContainerForSignature);
+                console.log(`Contenedor para firma (Pág ${finalPageIdxForSignature + 1}) tiene ${linesInCurrentFinalContainer} líneas ANTES de ajuste de firma.`);
+                const SIGNATURE_MOVE_THRESHOLD = 35;
+
+                if (linesInCurrentFinalContainer >= SIGNATURE_MOVE_THRESHOLD && targetContainerForSignature.children.length > 0) {
+                    const childrenOfFinal = Array.from(targetContainerForSignature.children).filter(el => !el.classList.contains('seccion-contenido-firma-dinamica'));
+                    const lastElementToMoveForSig = childrenOfFinal.length > 0 ? childrenOfFinal[childrenOfFinal.length - 1] : null;
+
+                    if (lastElementToMoveForSig && (finalPageIdxForSignature + 1) < allPages.length) {
+                        const nextPageForSigDiv = allPages[finalPageIdxForSignature + 1];
+                        const bodyInNextPageForSig = nextPageForSigDiv.querySelector('.seccion-cuerpo-pagina');
+                        if (bodyInNextPageForSig) {
+                            console.log('Moviendo último elemento:', lastElementToMoveForSig, 'a Pág', finalPageIdxForSignature + 2, 'para la firma.');
+                            bodyInNextPageForSig.appendChild(lastElementToMoveForSig);
+                            targetContainerForSignature = bodyInNextPageForSig;
+                            finalPageIdxForSignature = finalPageIdxForSignature + 1;
+                        }
+                    }
+                }
+
+                const linesForFlexGrow = countRenderedLinesInContainer(targetContainerForSignature);
+                const FEW_LINES_THRESHOLD_FOR_GROW = 25;
+                console.log(`Página final de firma (${finalPageIdxForSignature + 1}) tiene ${linesForFlexGrow} líneas de texto (antes de añadir firma y ajustar flex).`);
+                if (linesForFlexGrow < FEW_LINES_THRESHOLD_FOR_GROW) {
+                    targetContainerForSignature.style.flexGrow = '0';
+                    console.log(`Ajustado flex-grow a 0 para la página de la firma (${finalPageIdxForSignature + 1}).`);
+                } else {
+                    targetContainerForSignature.style.flexGrow = '1';
+                    console.log(`Ajustado flex-grow a 1 para la página de la firma (${finalPageIdxForSignature + 1}).`);
+                }
+
+                const firmaWrapperDiv = document.createElement('div');
+                firmaWrapperDiv.className = 'seccion-contenido-firma-dinamica';
+                const firmaInnerDiv = document.createElement('div');
+                firmaInnerDiv.className = 'contenido-footer';
+                firmaInnerDiv.innerHTML = signatureInnerHtml;
+                firmaWrapperDiv.appendChild(firmaInnerDiv);
+                targetContainerForSignature.appendChild(firmaWrapperDiv);
+                console.log('Firma dinámica añadida a Pág ', finalPageIdxForSignature + 1);
+
+            } else {
+                console.error('No se pudo determinar un contenedor final activo para añadir la firma.');
+            }
+
+            console.log('Iniciando proceso de eliminación de páginas vacías...');
+            for (let i = allPages.length - 1; i >= 0; i--) {
+                const pageDiv = allPages[i];
+                const bodyContainer = pageDiv.querySelector('.seccion-cuerpo-pagina');
+                const signaturePresent = pageDiv.querySelector('.seccion-contenido-firma-dinamica');
+                let bodyIsEmpty = true;
+
+                if (bodyContainer && bodyContainer.children.length > 0) {
+                    bodyIsEmpty = Array.from(bodyContainer.children).every(child => {
+                        return child.nodeType === Node.COMMENT_NODE ||
+                            (child.nodeType === Node.TEXT_NODE && child.textContent.trim() === '') ||
+                            (child.nodeType === Node.ELEMENT_NODE && child.textContent.trim() === '' && !child.querySelector('img'));
+                    });
+                } else if (bodyContainer && bodyContainer.children.length === 0) {
+                    bodyIsEmpty = true;
+                } else if (!bodyContainer) {
+                    bodyIsEmpty = true;
+                }
+
+                if (bodyIsEmpty && !signaturePresent) {
+                    if (i === 0 && pageDiv.querySelector('.seccion-encabezado-fija')) {
+                        console.log(`Página 1 está vacía y sin firma, pero se conserva por ser la primera con encabezado.`);
+                    } else if (i !== 0) {
+                        console.log(`Página ${i + 1} está vacía y sin firma. Eliminando.`);
+                        pageDiv.remove();
+                    } else if (i === 0 && !pageDiv.querySelector('.seccion-encabezado-fija')) {
+                        console.log(`Página 1 está totalmente vacía (sin encabezado, cuerpo o firma). Eliminando.`);
+                        pageDiv.remove();
+                    }
+                } else {
+                    console.log(`Página ${i + 1} conservada. BodyIsEmpty: ${bodyIsEmpty}, SignaturePresent: ${!!signaturePresent}`);
+                }
+            }
+            console.log('Proceso de eliminación de páginas vacías completado.');
+
+        });
+    </script>
+
+</body>
+
+</html>

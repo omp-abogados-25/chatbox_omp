@@ -28,8 +28,13 @@ export class CreatePositionController {
   @ApiOperation({ summary: 'Crear un nuevo cargo', description: 'Registra un nuevo cargo en el sistema.' })
   @ApiCreatedResponse({ description: 'El cargo ha sido creado exitosamente.', type: PositionResponseDto })
   @ApiBadRequestResponse({ description: 'Los datos proporcionados para crear el cargo son inválidos.' })
-  async create(@Body() createPositionDto: CreatePositionRequestDto): Promise<PositionResponseDto> {
-    const newPositionDomain = await this.createPositionUseCase.execute(createPositionDto);
+  async create(@Body() createPositionDto: CreatePositionRequestDto[]): Promise<PositionResponseDto> {
+    // const newPositionDomain = await this.createPositionUseCase.execute(createPositionDto);
+    // return mapDomainToResponseDto(newPositionDomain);
+    let newPositionDomain;
+    for (const position of createPositionDto) {
+      newPositionDomain = await this.createPositionUseCase.execute(position);
+    }
     return mapDomainToResponseDto(newPositionDomain);
   }
 } 

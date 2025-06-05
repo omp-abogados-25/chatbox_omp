@@ -1,5 +1,4 @@
 import { Controller, Post, Get, Body, Query, UseGuards, HttpCode } from '@nestjs/common';
-import { ReceiveMessageDto } from '../dtos/receive-message.dto';
 import { VerifyTokenGuard } from '../guards/verify-token.guard';
 import { HandleIncomingMessageUseCase } from 'src/whatsapp-webhook/application';
 
@@ -10,7 +9,7 @@ export class WebhookController {
   @Post()
   @HttpCode(200)
   @UseGuards(VerifyTokenGuard)
-  async receive(@Body() dto: ReceiveMessageDto) {
+  async receive(@Body() dto: any) {
     await this.handleMessage.execute(dto);
   }
 

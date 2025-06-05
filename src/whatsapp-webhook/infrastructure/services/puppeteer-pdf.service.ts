@@ -9,7 +9,7 @@ export class PuppeteerPdfService {
 
   async generatePdfFromHtml(
     htmlContent: string,
-    pdfOptions: puppeteer.PDFOptions = { format: 'Legal', printBackground: true, margin: { top: '0mm', bottom: '0mm', left: '0mm', right: '0mm' }, preferCSSPageSize: true },
+    pdfOptions: Omit<puppeteer.PDFOptions, 'path'> = { format: 'Letter', printBackground: true, preferCSSPageSize: true },
     puppeteerLaunchArgs: string[] = [
         '--no-sandbox', 
         '--disable-setuid-sandbox', 
@@ -17,7 +17,10 @@ export class PuppeteerPdfService {
         // '--single-process', // Consider re-adding if issues persist in some environments
         // '--no-zygote',
         // '--disable-gpu' // Headless defaults should handle this
-    ]
+    ],
+    headerHtml?: string,
+    footerHtml?: string,
+    pageMargins?: puppeteer.PDFOptions['margin']
   ): Promise<string> { // Returns the path to the generated PDF
     const projectRootDir = path.resolve(__dirname, '../../../../'); // Adjust if necessary
     const tempWorkingDir = path.resolve(projectRootDir, 'temp_pdf_generation');
@@ -38,8 +41,8 @@ export class PuppeteerPdfService {
     try {
       browser = await puppeteer.launch({
         args: puppeteerLaunchArgs,
-        headless: true,
-        timeout: 60000,
+        headless: true, // Recommended to keep true for server-side generation
+        timeout: 60000, // Browser launch timeout
       });
       this.logger.log('Puppeteer browser launched.');
       const page = await browser.newPage();
@@ -51,11 +54,39 @@ export class PuppeteerPdfService {
       await page.emulateMediaType('screen');
       const pageUrl = `file:///${tempHtmlPath.replace(/\\/g, '/')}`;
       this.logger.log(`Puppeteer navigating to: ${pageUrl}`);
-      await page.goto(pageUrl, { waitUntil: 'load', timeout: 120000 });
+      // Increased timeout for page.goto to 120 seconds for complex pages
+      await page.goto(pageUrl, { waitUntil: 'load', timeout: 120000 }); 
 
       this.logger.log(`Attempting to generate PDF at: ${tempPdfPath}`);
-      await page.pdf({ ...pdfOptions, path: tempPdfPath, timeout: 90000 });
-      this.logger.log(`Temporary PDF generated at: ${tempPdfPath}`);
+      
+      const finalPdfOptions: puppeteer.PDFOptions = {
+        ...pdfOptions, 
+        path: tempPdfPath,
+        printBackground: pdfOptions.printBackground !== undefined ? pdfOptions.printBackground : true,
+        preferCSSPageSize: pdfOptions.preferCSSPageSize !== undefined ? pdfOptions.preferCSSPageSize : true,
+        timeout: pdfOptions.timeout || 90000, // Usar timeout de pdfOptions o default
+      };
+
+      // Solo añadir opciones de header/footer/margin si se proveen explícitamente
+      if (headerHtml || footerHtml) {
+        finalPdfOptions.headerTemplate = headerHtml || '<span></span>';
+        finalPdfOptions.footerTemplate = footerHtml || '<span></span>';
+        finalPdfOptions.displayHeaderFooter = true;
+      } else {
+        finalPdfOptions.displayHeaderFooter = false;
+      }
+
+      if (pageMargins) {
+        finalPdfOptions.margin = pageMargins;
+      } else if (finalPdfOptions.displayHeaderFooter) {
+        // Si hay header/footer pero no márgenes, poner unos mínimos para evitar error
+        this.logger.warn('Header/Footer HTML provided without explicit pageMargins. Using minimal default margins.')
+        finalPdfOptions.margin = { top: '1cm', bottom: '1cm', left: '1cm', right: '1cm' };
+      }
+      // Si no hay displayHeaderFooter y no hay pageMargins, Puppeteer usará sus propios márgenes por defecto (usualmente pequeños).
+
+      await page.pdf(finalPdfOptions);
+      this.logger.log(`Temporary PDF generated at: ${tempPdfPath}. Header/Footer display: ${finalPdfOptions.displayHeaderFooter}`);
       
       return tempPdfPath;
     } catch (error) {

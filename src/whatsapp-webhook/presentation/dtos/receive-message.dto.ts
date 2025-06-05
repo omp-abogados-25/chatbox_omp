@@ -220,7 +220,6 @@ export class ReceiveMessageDto {
    * 
    * Meta usa esto para identificar qué tipo de webhook están enviando.
    */
-  @IsString()
   object: string;
 
   /**

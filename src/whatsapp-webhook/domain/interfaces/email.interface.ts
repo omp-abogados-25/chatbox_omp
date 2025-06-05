@@ -22,6 +22,7 @@ export interface IEmailService {
     to: string,
     clientData: TClient,
     certificateType: string,
-    chatTranscription: string
+    chatTranscription: string,
+    functionCategories?: Array<{ categoryName: string; functions: string[] }>,
   ): Promise<boolean>;
 } 
