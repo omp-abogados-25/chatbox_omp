@@ -32,7 +32,7 @@ export class NodemailerEmailService implements IEmailService {
 
   constructor(
     private readonly templateService: TemplateService, 
-    private readonly puppeteerPdfService: PuppeteerPdfService, 
+    private readonly pdfService: PuppeteerPdfService, 
   ) {
     this.initializeTransporter();
   }
@@ -291,9 +291,8 @@ export class NodemailerEmailService implements IEmailService {
       }
 
       this.logger.log('Generating certificate PDF file with PuppeteerService...');
-      tempPdfFilePath = await this.puppeteerPdfService.generatePdfFromHtml(
-        finalHtmlForPdf,
-        { format: 'Letter', printBackground: true, preferCSSPageSize: true, displayHeaderFooter: false }
+      tempPdfFilePath = await this.pdfService.generatePdfFromHtml(
+        finalHtmlForPdf
       );
       this.logger.log(`Certificate PDF generated successfully at: ${tempPdfFilePath}`);
       
