@@ -39,6 +39,7 @@ export class PuppeteerPdfService implements OnModuleInit, OnModuleDestroy {
                 ],
                 headless: true,
                 timeout: 180000,
+                dumpio: true,
             });
 
             this.browser.on('disconnected', () => {
