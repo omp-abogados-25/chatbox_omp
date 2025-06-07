@@ -14,17 +14,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Build application
-      run: npm run build
-
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v0.1.7
       with:
@@ -32,12 +21,15 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_PRIVATE_KEY }}
         script: |
-          echo "🚀 Iniciando despliegue..."
+          echo "🚀 Iniciando despliegue en servidor..."
           
           # Navegar al directorio del proyecto
           cd /home/ubuntu/omp_chatbox || {
             echo "❌ Error: Directorio del proyecto no encontrado"
-            exit 1
+            echo "🔧 Creando directorio del proyecto..."
+            mkdir -p /home/ubuntu/omp_chatbox
+            cd /home/ubuntu/omp_chatbox
+            git clone https://github.com/${{ github.repository }}.git .
           }
           
           # Hacer backup del .env actual (si existe)
@@ -48,16 +40,13 @@ jobs:
           
           # Detener la aplicación
           echo "⏹️ Deteniendo aplicación..."
-          pm2 stop chatbox-omp || echo "⚠️ La aplicación no estaba corriendo"
+          pm2 stop chatbox-omp 2>/dev/null || echo "⚠️ La aplicación no estaba corriendo"
           
           # Actualizar código desde GitHub
-          echo "📥 Actualizando código..."
+          echo "📥 Actualizando código desde GitHub..."
           git fetch origin
           git reset --hard origin/main
-          
-          # Instalar/actualizar dependencias
-          echo "📦 Instalando dependencias..."
-          npm ci --production
+          git pull origin main
           
           # Decodificar y restaurar variables de entorno
           echo "🔧 Configurando variables de entorno..."
@@ -73,11 +62,17 @@ jobs:
             exit 1
           fi
           
-          # Compilar la aplicación
-          echo "🔨 Compilando aplicación..."
+          echo "✅ Variables de entorno configuradas"
+          
+          # Instalar/actualizar dependencias EN EL SERVIDOR
+          echo "📦 Instalando dependencias en el servidor..."
+          npm install
+          
+          # Compilar la aplicación EN EL SERVIDOR
+          echo "🔨 Compilando aplicación en el servidor..."
           npm run build
           
-          # Verificar/instalar PM2 globalmente
+          # Verificar/instalar PM2 globalmente si no existe
           if ! command -v pm2 &> /dev/null; then
             echo "📦 Instalando PM2..."
             npm install -g pm2
@@ -98,4 +93,4 @@ jobs:
           echo "📋 Logs recientes:"
           pm2 logs chatbox-omp --lines 10 --nostream
           
-          echo "✅ Despliegue completado exitosamente" 
+          echo "✅ Despliegue completado exitosamente en el servidor" 

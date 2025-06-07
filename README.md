@@ -1,73 +1,117 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# 🤖 OMP ChatBox - Sistema de Certificados Laborales
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Sistema automatizado de WhatsApp para generación de certificados laborales.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Despliegue Súper Fácil
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
-
+### ⭐ Método Simplificado
 ```bash
-$ pnpm install
+# 1. Generar archivo de variables de entorno
+npm run generate-secrets
+
+# 2. Abre la carpeta: github-secrets/
+# 3. Lee: _INSTRUCCIONES.txt
+# 4. Configura los 4 secrets en GitHub
+# 5. Copia assets directamente al servidor
 ```
 
-## Running the app
-
-```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+### 📂 Lo que obtienes:
+```
+github-secrets/
+├── ENV_BASE64.txt        → Secret: ENV_BASE64
+└── _INSTRUCCIONES.txt    → 📋 Tu guía paso a paso
 ```
 
-## Test
+### 🎯 Proceso Completo:
+
+1. **Generar variables de entorno:**
+   ```bash
+   npm run generate-secrets
+   ```
+
+2. **Configurar GitHub Secrets:**
+   - Ve a tu repo → **Settings** → **Secrets and variables** → **Actions**
+   - Abre la carpeta `github-secrets/`
+   - Lee `_INSTRUCCIONES.txt`
+   - Configura estos 4 secrets:
+     - `ENV_BASE64` (del archivo ENV_BASE64.txt)
+     - `EC2_HOST`: `ec2-3-20-176-105.us-east-2.compute.amazonaws.com`
+     - `EC2_USER`: `ubuntu`
+     - `EC2_PRIVATE_KEY`: Contenido completo del archivo `.pem`
+
+3. **Copiar assets al servidor:**
+   ```bash
+   # Usando SCP (reemplaza la ruta de tu .pem)
+   scp -i "tu-clave.pem" -r assets/ ubuntu@ec2-3-20-176-105.us-east-2.compute.amazonaws.com:/home/ubuntu/omp_chatbox/
+   
+   # O usando FileZilla/WinSCP con GUI
+   ```
+
+4. **Desplegar:**
+   ```bash
+   git push origin main
+   ```
+
+## 📋 Comandos Disponibles
 
 ```bash
-# unit tests
-$ pnpm run test
+# Verificar configuración
+npm run check-deploy
 
-# e2e tests
-$ pnpm run test:e2e
+# Generar variables de entorno (RECOMENDADO)
+npm run generate-secrets
 
-# test coverage
-$ pnpm run test:cov
+# Solo variables de entorno
+npm run encode-env
 ```
 
-## Support
+## 🔧 Desarrollo
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+# Desarrollo local
+npm run start:dev
 
-## Stay in touch
+# Producción local
+npm run build
+npm run start:prod
+```
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 🔧 Monitoreo en Servidor
 
-## License
+```bash
+# Conectar al servidor
+ssh -i "chatbox_omp_key_server.pem" ubuntu@ec2-3-20-176-105.us-east-2.compute.amazonaws.com
 
-Nest is [MIT licensed](LICENSE).
+# Ver estado de la aplicación
+pm2 status
+
+# Ver logs en tiempo real
+pm2 logs chatbox-omp
+
+# Reiniciar aplicación
+pm2 restart chatbox-omp
+```
+
+## ✨ Características
+
+- 🔧 **Variables de Entorno Protegidas**: Configuración segura
+- 🤖 **Despliegue Automático**: Push → Deploy automático
+- 📁 **Assets Directos**: Copia manual al servidor (más rápido)
+- 📋 **Proceso Simple**: Solo 4 secrets de GitHub
+- ⚡ **Súper Fácil**: Un comando para variables de entorno
+
+## 📖 Documentación Completa
+
+Ver [DEPLOYMENT.md](./DEPLOYMENT.md) para documentación detallada.
+
+## 🔒 Seguridad
+
+- ✅ Variables de entorno encriptadas  
+- ✅ Archivos de secrets en .gitignore
+- ✅ Assets copiados directamente (no expuestos)
+- ✅ Conexión SSH segura
+- ✅ Despliegue automático sin exposición de secretos
+
+---
+
+**Desarrollado para OMP Abogados** | Sistema de Certificados Laborales v2.0
