@@ -1,0 +1,101 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        script: |
+          echo "🚀 Iniciando despliegue..."
+          
+          # Navegar al directorio del proyecto
+          cd /home/ubuntu/omp_chatbox || {
+            echo "❌ Error: Directorio del proyecto no encontrado"
+            exit 1
+          }
+          
+          # Hacer backup del .env actual (si existe)
+          if [ -f .env ]; then
+            cp .env .env.backup.$(date +%Y%m%d_%H%M%S)
+            echo "📦 Backup del .env creado"
+          fi
+          
+          # Detener la aplicación
+          echo "⏹️ Deteniendo aplicación..."
+          pm2 stop chatbox-omp || echo "⚠️ La aplicación no estaba corriendo"
+          
+          # Actualizar código desde GitHub
+          echo "📥 Actualizando código..."
+          git fetch origin
+          git reset --hard origin/main
+          
+          # Instalar/actualizar dependencias
+          echo "📦 Instalando dependencias..."
+          npm ci --production
+          
+          # Decodificar y restaurar variables de entorno
+          echo "🔧 Configurando variables de entorno..."
+          echo "${{ secrets.ENV_BASE64 }}" | base64 -d > .env
+          
+          # Verificar que el .env se decodificó correctamente
+          if [ ! -s .env ]; then
+            echo "❌ Error: Archivo .env vacío después de decodificar"
+            if [ -f .env.backup.* ]; then
+              echo "🔄 Restaurando backup del .env..."
+              cp .env.backup.* .env
+            fi
+            exit 1
+          fi
+          
+          # Compilar la aplicación
+          echo "🔨 Compilando aplicación..."
+          npm run build
+          
+          # Verificar/instalar PM2 globalmente
+          if ! command -v pm2 &> /dev/null; then
+            echo "📦 Instalando PM2..."
+            npm install -g pm2
+          fi
+          
+          # Iniciar la aplicación con PM2
+          echo "🚀 Iniciando aplicación..."
+          pm2 start dist/main.js --name "chatbox-omp" --time || pm2 restart chatbox-omp
+          
+          # Guardar configuración de PM2
+          pm2 save
+          
+          # Verificar estado
+          echo "📊 Estado de la aplicación:"
+          pm2 status chatbox-omp
+          
+          # Mostrar logs recientes
+          echo "📋 Logs recientes:"
+          pm2 logs chatbox-omp --lines 10 --nostream
+          
+          echo "✅ Despliegue completado exitosamente" 
