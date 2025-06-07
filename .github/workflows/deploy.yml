@@ -102,6 +102,10 @@ jobs:
           echo "📦 Instalando dependencias en el servidor..."
           npm install
           
+          # Generar cliente de Prisma
+          echo "🗄️ Generando cliente de Prisma..."
+          npx prisma generate --schema=./src/integrations/schema.prisma
+          
           # Compilar la aplicación EN EL SERVIDOR
           echo "🔨 Compilando aplicación en el servidor..."
           npm run build
