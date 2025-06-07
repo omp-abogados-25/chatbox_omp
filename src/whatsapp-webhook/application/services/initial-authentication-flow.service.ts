@@ -82,8 +82,15 @@ export class InitialAuthenticationFlowService {
    * @returns {Promise<void>}
    */
   private async sendWelcomeMessageInternal(from: string, messageId: string, phoneNumberId: string, session: SessionWithAllData, profile?: any): Promise<void> {
-    const personalizedWelcome = this.profileService.generateWelcomeMessage(profile);
-    const welcomeMessage = `${personalizedWelcome}\n\nPara comenzar, necesito verificar tu identidad.\n\n📝 Por favor, ingresa tu número de documento (cédula):`;
+    const welcomeMessage = `¡Hola! 👋 Bienvenido al sistema de #OMPLovers
+Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de manera rápida y segura.
+
+🔐 *¿Sabías que?* 
+* Puedes escribir directamente: "Necesito un certificado laboral"
+* O también: "Mi cédula es 12345678"
+* ¡El sistema es inteligente y te entenderá!
+
+📝 Para comenzar, ingresa tu número de documento:`;
     
     await this.sendMessageAndLog(from, welcomeMessage, messageId, phoneNumberId);
     session.documentType = DocumentType.CC; 
@@ -207,7 +214,15 @@ export class InitialAuthenticationFlowService {
       );
     } else {
       this.logger.warn(`[${from}] InitialAuthFlow: User NOT FOUND for DocType: ${session.documentType}, DocNum: ${numericId}.`);
-      const notFoundMessage = `❌ No pudimos encontrar el número de documento (${numericId}) en nuestros registros con el tipo de documento (${session.documentType}). Verifica que los datos sean correctos e inténtalo de nuevo. Si el problema persiste, contacta a RRHH.\n\nPuedes ingresar el número de documento otra vez o escribir "finalizar".`;
+      const notFoundMessage = `❌ *No eres empleado activo actualmente*
+El documento no se encuentra registrado.
+
+🔄 *¿Qué puedes hacer?*
+* Verifica que el número esté correcto
+* Intenta nuevamente con el documento correcto
+* Escribe "finalizar" para salir
+
+📝 Ingresa tu número de documento:`;
       await this.sendMessageAndLog(from, notFoundMessage, messageId, phoneNumberId);
       this.sessionManager.updateSessionState(from, SessionState.WAITING_DOCUMENT_NUMBER); 
     }

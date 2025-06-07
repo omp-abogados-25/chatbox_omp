@@ -7,10 +7,20 @@ import * as path from 'path';
 import { TClient } from 'src/whatsapp-webhook/domain';
 
 import { TemplateService } from './template.service';
-import { PuppeteerPdfService } from './puppeteer-pdf.service';
+import { Api2PdfService } from './api2pdf.service';
 
-const FIRMANTE_NOMBRE = 'Vanessa Marquez Tejera';
-const FIRMANTE_CARGO = 'Coordinadora de Gestión Humana';
+// Firmante por defecto (para la mayoría de certificados)
+const FIRMANTE_NOMBRE_DEFAULT = 'Vanessa Marquez Tejera';
+const FIRMANTE_CARGO_DEFAULT = 'Coordinadora de Gestión Humana';
+const FIRMA_IMAGE_PATH_DEFAULT = 'assets/images/firma.png';
+
+// Firmante alternativo (cuando el certificado es para la gerente de RRHH)
+const FIRMANTE_NOMBRE_ALTERNATIVO = 'Andrea Paola Sanchez Rueda';
+const FIRMANTE_CARGO_ALTERNATIVO = 'Directora Comercial y Financiera';
+const FIRMA_IMAGE_PATH_ALTERNATIVO = 'assets/images/firma2.png';
+
+// Documento de la gerente de RRHH que no puede firmarse a sí misma
+const DOCUMENTO_GERENTE_RRHH = '1140851923';
 
 const CERT_CON_SUELDO_TEMPLATE = 'plantilla_certificado_con_sueldo_sin_funciones.hbs';
 const CERT_SIN_SUELDO_TEMPLATE = 'plantilla_certificado_sin_sueldo_sin_funciones.hbs';
@@ -22,7 +32,6 @@ const CERTIFICATE_EMAIL_TEMPLATE = 'email/certificate_dispatch_email.hbs';
 
 const HEADER_IMAGE_PATH_RELATIVE = 'assets/images/image2.jpg';
 const FOOTER_IMAGE_PATH_RELATIVE = 'assets/images/image1.jpg';
-const FIRMA_IMAGE_PATH_RELATIVE = 'assets/images/firma.png';
 const LOGO_OMP_PATH_RELATIVE = 'assets/images/logo.png';
 
 @Injectable()
@@ -32,7 +41,7 @@ export class NodemailerEmailService implements IEmailService {
 
   constructor(
     private readonly templateService: TemplateService, 
-    private readonly pdfService: PuppeteerPdfService, 
+    private readonly pdfService: Api2PdfService, 
   ) {
     this.initializeTransporter();
   }
@@ -163,6 +172,38 @@ export class NodemailerEmailService implements IEmailService {
     }
   }
 
+  /**
+   * Determina qué firmante usar basado en el documento del cliente
+   * @param clientDocumentNumber - Número de documento del cliente
+   * @returns Objeto con los datos del firmante a usar
+   */
+  private getSignerData(clientDocumentNumber: string): {
+    nombre: string;
+    cargo: string;
+    imagePath: string;
+  } {
+    // Limpiar el número de documento (remover puntos, espacios, etc.)
+    const cleanDocumentNumber = clientDocumentNumber.replace(/[.\s-]/g, '');
+    
+    // Si es el documento de la gerente de RRHH, usar firmante alternativo
+    if (cleanDocumentNumber === DOCUMENTO_GERENTE_RRHH) {
+      this.logger.log(`Certificado para gerente de RRHH (${clientDocumentNumber}). Usando firmante alternativo: ${FIRMANTE_NOMBRE_ALTERNATIVO}`);
+      return {
+        nombre: FIRMANTE_NOMBRE_ALTERNATIVO,
+        cargo: FIRMANTE_CARGO_ALTERNATIVO,
+        imagePath: FIRMA_IMAGE_PATH_ALTERNATIVO
+      };
+    }
+    
+    // Para todos los demás casos, usar firmante por defecto
+    this.logger.log(`Certificado para empleado regular (${clientDocumentNumber}). Usando firmante por defecto: ${FIRMANTE_NOMBRE_DEFAULT}`);
+    return {
+      nombre: FIRMANTE_NOMBRE_DEFAULT,
+      cargo: FIRMANTE_CARGO_DEFAULT,
+      imagePath: FIRMA_IMAGE_PATH_DEFAULT
+    };
+  }
+
   async sendCertificateEmail(
     to: string, 
     clientData: TClient, 
@@ -184,13 +225,16 @@ export class NodemailerEmailService implements IEmailService {
         currentDateFormatted
       } = this.getFormattedCertificateDates();
       
+      // Determinar qué firmante usar basado en el documento del cliente
+      const signerData = this.getSignerData(clientData.documentNumber);
+      
       const currentTime = new Date().toLocaleTimeString('es-CO');
       const projectRootDir = path.resolve(__dirname, '../../../../');
       const fontsBaseFileUrl = `file:///${path.resolve(projectRootDir, 'assets/fonts').replace(/\\/g, '/')}`;
       const headerImageFileUrl = `file:///${path.resolve(projectRootDir, HEADER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
       const footerImageFileUrl = `file:///${path.resolve(projectRootDir, FOOTER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
-      const firmaImageFileUrl = `file:///${path.resolve(projectRootDir, FIRMA_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
-      const logoOmpForEmailPath = path.resolve(projectRootDir, LOGO_OMP_PATH_RELATIVE); 
+      const firmaImageFileUrl = `file:///${path.resolve(projectRootDir, signerData.imagePath).replace(/\\/g, '/')}`;
+      const logoOmpForEmailPath = path.resolve(projectRootDir, LOGO_OMP_PATH_RELATIVE);
 
       this.logger.debug(`Fonts Base URL: ${fontsBaseFileUrl}`);
       this.logger.debug(`Header Image URL: ${headerImageFileUrl}`);
@@ -235,12 +279,12 @@ export class NodemailerEmailService implements IEmailService {
           headerImageFileUrl: headerImageFileUrl,
           footerImageFileUrl: footerImageFileUrl,
           firmaImageFileUrl: firmaImageFileUrl,
-          nameFirmante: FIRMANTE_NOMBRE,
-          positionFirmante: FIRMANTE_CARGO,
+          nameFirmante: signerData.nombre,
+          positionFirmante: signerData.cargo,
           functionCategories: functionCategories, 
         };
 
-        finalHtmlForPdf = await this.templateService.compileTemplate(
+        finalHtmlForPdf = await this.templateService.compileCertificateTemplate(
           plantillaSeleccionada,
           templateDataForConFunciones,
           'assets/templates'
@@ -273,11 +317,11 @@ export class NodemailerEmailService implements IEmailService {
           headerImageFileUrl: headerImageFileUrl,
           footerImageFileUrl: footerImageFileUrl,
           firmaImageFileUrl: firmaImageFileUrl,
-          nameFirmante: FIRMANTE_NOMBRE,
-          positionFirmante: FIRMANTE_CARGO,
+          nameFirmante: signerData.nombre,
+          positionFirmante: signerData.cargo,
         };
         
-        finalHtmlForPdf = await this.templateService.compileTemplate(
+        finalHtmlForPdf = await this.templateService.compileCertificateTemplate(
           plantillaSeleccionada,
           templateDataSinFunciones,
           'assets/templates'
@@ -290,7 +334,7 @@ export class NodemailerEmailService implements IEmailService {
         return false;
       }
 
-      this.logger.log('Generating certificate PDF file with PuppeteerService...');
+      this.logger.log('Generating certificate PDF file with Api2PdfService...');
       tempPdfFilePath = await this.pdfService.generatePdfFromHtml(
         finalHtmlForPdf
       );

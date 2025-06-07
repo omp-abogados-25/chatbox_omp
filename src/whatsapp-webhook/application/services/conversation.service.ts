@@ -195,7 +195,7 @@ export class ConversationService {
 
     const onSubFlowCompletedAndAuthenticated = async () => {
       this.logger.log(`[${from}] Orchestrator: A sub-flow (e.g., certificate) completed. User is AUTHENTICATED. Prompting for next action.`);
-      await this.sendMessageAndLog(from, '¿Hay algo más en lo que te pueda ayudar hoy? Escribe "certificado" para una nueva solicitud o "finalizar" para terminar.', messageId, phoneNumberId);
+      await this.sendMessageAndLog(from, '¿Necesitas algo más? Puedes solicitar otro certificado o finalizar la conversación.', messageId, phoneNumberId);
     };
 
     switch (session.state) {
@@ -230,13 +230,23 @@ export class ConversationService {
             await this.sendMessageAndLog(from, 'Sesión finalizada. ¡Gracias por usar nuestros servicios! 👋', messageId, phoneNumberId);
         } else {
             this.logger.log(`[${from}] Orchestrator: Authenticated user unhandled message. Prompting action.`);
-            await this.sendMessageAndLog(from, 'Estoy listo para ayudarte. Puedes escribir "certificado" para solicitar un certificado laboral o "finalizar" para terminar.', messageId, phoneNumberId);
+            await this.sendMessageAndLog(from, '¿Necesitas algo más? Puedes solicitar otro certificado escribiendo "certificado" o "finalizar" para terminar.', messageId, phoneNumberId);
         }
         break;
 
       case SessionState.WAITING_CERTIFICATE_TYPE:
-      case SessionState.WAITING_FUNCTION_DETAIL_CHOICE:
         this.logger.log(`[${from}] Orchestrator Router: State ${session.state}. Delegating to CertificateConversationFlowService for menu selection.`);
+        await this.certificateConversationFlowService.handleMenuSelection(
+          from,
+          analysis.originalMessage,
+          messageId,
+          phoneNumberId,
+          onSubFlowCompletedAndAuthenticated
+        );
+        break;
+      
+      case SessionState.WAITING_FINAL_ACTION:
+        this.logger.log(`[${from}] Orchestrator Router: State ${session.state}. Delegating to CertificateConversationFlowService for final action selection.`);
         await this.certificateConversationFlowService.handleMenuSelection(
           from,
           analysis.originalMessage,

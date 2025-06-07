@@ -33,11 +33,15 @@ export class MfaConversationFlowService {
   }
   
   private async sendWelcomeMessage(from: string, messageId: string, phoneNumberId: string): Promise<void> {
-    const welcomeMessage = `¡Hola! 👋 Bienvenido al sistema de certificados laborales.
+    const welcomeMessage = `¡Hola! 👋 Bienvenido al sistema de #OMPLovers
+Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de manera rápida y segura.
 
-Para comenzar, necesito verificar tu identidad.
+🔐 *¿Sabías que?* 
+* Puedes escribir directamente: "Necesito un certificado laboral"
+* O también: "Mi cédula es 12345678"
+* ¡El sistema es inteligente y te entenderá!
 
-📝 Por favor, ingresa tu número de documento (cédula):`;
+📝 Para comenzar, ingresa tu número de documento:`;
     await this.sendMessageAndLog(from, welcomeMessage, messageId, phoneNumberId);
     const session = this.sessionManager.getSession(from) || this.sessionManager.createSession(from);
     session.documentType = DocumentType.CC; 
@@ -97,7 +101,11 @@ Para comenzar, necesito verificar tu identidad.
       session.mfaSessionId = mfaSessionData.id;
       this.sessionManager.updateSessionActivity(from);
 
-      let mfaPromptMessage = `🔒 Hemos generado un código de verificación para ti.\n\nIngresa el código de 6 dígitos para continuar:`;
+      // Primero enviamos el mensaje de confirmación de usuario encontrado
+      const userFoundMessage = `🎉 ¡Perfecto! Te hemos identificado como *${actualClientName}*.
+
+🔍 Documento: ${documentType} ${documentNumber}`;
+      await this.sendMessageAndLog(from, userFoundMessage, messageId, phoneNumberId);
 
       const expiresInMilliseconds = new Date(mfaSessionData.expiresAt).getTime() - Date.now();
       const expiresInMinutes = Math.max(0, Math.floor(expiresInMilliseconds / (1000 * 60)));
@@ -110,14 +118,22 @@ Para comenzar, necesito verificar tu identidad.
         expiresInMinutes
       );
 
+      let mfaPromptMessage: string;
       if (emailSent) {
         this.logger.log(`Código TOTP enviado exitosamente a ${emailForMfa}`);
         const maskedEmail = this.maskEmail(emailForMfa);
-        mfaPromptMessage = `🔒 Hemos enviado un código de verificación a tu correo electrónico (${maskedEmail}).\n\nPor favor, revisa tu bandeja de entrada (y spam) e ingresa el código de 6 dígitos para continuar:`;
+        mfaPromptMessage = `🎉 ¡Hola, ${actualClientName}! Ya estás dentro del sistema #OMPLover.
+
+🔐 Para continuar, hemos enviado un código de verificación a tu correo electrónico:
+📧 ${maskedEmail}  
+
+Por favor revisa tu bandeja de entrada (y spam) e ingresa el código de 6 dígitos que recibiste.
+
+⏰ El código expira en 10 minutos.
+🔄 Tienes máximo 3 intentos para ingresarlo correctamente.`;
       } else {
         this.logger.warn(`No se pudo enviar el correo electrónico con el código TOTP a ${emailForMfa}. El código generado es: ${mfaSessionData.totpCode}.`);
         mfaPromptMessage = `Lo sentimos, tuvimos un problema al enviar el código a tu correo. Por favor, intenta verificar tu identidad nuevamente en unos minutos.`;
-         mfaPromptMessage = `Lo sentimos, tuvimos un problema al enviar el código a tu correo. Por favor, intenta verificar tu identidad nuevamente en unos minutos.`;
       }
       
       await this.sendMessageAndLog(from, mfaPromptMessage, messageId, phoneNumberId);

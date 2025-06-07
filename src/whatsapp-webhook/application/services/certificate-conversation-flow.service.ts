@@ -86,28 +86,11 @@ export class CertificateConversationFlowService {
       // Intenta enviar el menú interactivo usando el servicio de mensajes
       await this.messageService.sendInteractiveMessage(menuMessage);
       this.transcriptionService.addMessage(from, 'system', `[Menú Interactivo] ${menuDescription}`);
+      this.logger.log(`Interactive menu sent successfully to ${from}: ${menuDescription}`);
     } catch (error) {
       this.logger.error(`Error sending interactive menu to ${from}:`, error instanceof Error ? error.message : String(error));
-      let fallbackMessage = fallbackMessageOverride || '';
-      
-      // Si no hay mensaje override, genera uno según el tipo de menú
-      if (!fallbackMessageOverride) {
-        const menuDescLower = menuDescription.toLowerCase();
-        if (menuDescLower.includes('certificado')) { 
-          fallbackMessage = `📄 **Certificados Laborales**\n\n¿Qué tipo de certificado necesitas?\n\n💰 **Con Sueldo** - Incluye información salarial\n📋 **Sin Sueldo** - Solo información básica\n\n💡 **Escribe:** "con sueldo", "sin sueldo" o "finalizar"`;
-        } else if (menuDescLower.includes('detalle de funciones')) { 
-          fallbackMessage = `📄 **Detalle de Funciones**\n\n¿Deseas que el certificado detalle tus funciones en el cargo?\n\n✅ **Sí, incluir funciones**\n❌ **No, omitir funciones**\n\n💡 **Escribe:** "con funciones", "sin funciones" o "finalizar"`;
-        } else {
-          fallbackMessage = `📋 **Opciones Disponibles**\n\nPor favor selecciona una opción escribiendo el texto correspondiente o escribe "finalizar" para salir.`;
-        }
-      }
-      try {
-        await this.messageService.reply(from, fallbackMessage, '', '');
-        this.transcriptionService.addMessage(from, 'system', `[Menú Texto Fallback] ${menuDescription}`);
-      } catch (fallbackError) {
-        // Registra error si falla el envío del fallback
-        this.logger.error(`Error sending fallback message to ${from}:`, fallbackError instanceof Error ? fallbackError.message : String(fallbackError));
-      }
+      // Re-lanza el error para que el método llamador pueda manejarlo
+      throw error;
     }
   }
   
@@ -199,55 +182,61 @@ export class CertificateConversationFlowService {
       interactive: {
         type: 'button',
         header: { type: 'text', text: '📄 Certificados Laborales' },
-        body: { text: '¿Qué tipo de certificado necesitas?\n\n💰 **Con Sueldo** - Incluye información salarial\n📋 **Sin Sueldo** - Solo información básica\n\n💡 También puedes escribir: "con sueldo", "sin sueldo" o "finalizar"' },
+        body: { 
+          text: '¿Qué tipo de certificado laboral necesitas?\n\n💡 *Selecciona un botón o escribe:*\n• "1" o "con salario"\n• "2" o "sin salario" \n• "3" o "con funciones"' 
+        },
         action: {
           buttons: [
-            { type: 'reply', reply: { id: 'cert_con_sueldo', title: '💰 Con Sueldo' } },
-            { type: 'reply', reply: { id: 'cert_sin_sueldo', title: '📋 Sin Sueldo' } }
+            { 
+              type: 'reply', 
+              reply: { 
+                id: 'cert_con_sueldo', 
+                title: '💰 1. Con Salario' 
+              } 
+            },
+            { 
+              type: 'reply', 
+              reply: { 
+                id: 'cert_sin_sueldo', 
+                title: '📋 2. Sin Salario' 
+              } 
+            },
+            { 
+              type: 'reply', 
+              reply: { 
+                id: 'cert_con_funciones', 
+                title: '🔧 3. Con Funciones' 
+              } 
+            }
           ]
         }
       }
     };
 
-    // Envía el menú interactivo y registra la acción
-    await this.sendInteractiveMenuAndLog(from, menuMessage, 'certificado');
+    // Intenta enviar el menú interactivo primero
+    try {
+      await this.sendInteractiveMenuAndLog(from, menuMessage, 'certificado');
+    } catch (error) {
+      this.logger.error(`Failed to send interactive menu to ${from}, falling back to text message:`, error instanceof Error ? error.message : String(error));
+      
+      // Fallback a mensaje de texto simple
+      const fallbackMessage = `📄 **Certificados Laborales**
+
+¿Qué tipo de certificado laboral necesitas?
+
+*Opciones disponibles:*
+1️⃣ Certificado con Salario - Incluye información salarial
+2️⃣ Certificado sin Salario - Solo información básica laboral  
+3️⃣ Certificado con Funciones - Incluye detalle de funciones del cargo
+
+💡 **Puedes escribir:** el número (1, 2, 3), el tipo ("con salario", "sin salario", "con funciones") o "finalizar"`;
+
+      await this.sendMessageAndLog(from, fallbackMessage, messageId, phoneNumberId);
+    }
 
     // Actualiza el estado de la sesión del usuario
     this.sessionManager.updateSessionState(from, SessionState.WAITING_CERTIFICATE_TYPE);
     this.logger.log(`Session state for ${from} updated to WAITING_CERTIFICATE_TYPE.`);
-  }
-
-  /**
-   * Muestra el menú para seleccionar si se incluyen funciones en el certificado
-   * @param from - Número de WhatsApp del usuario
-   * @param messageId - ID del mensaje de WhatsApp
-   * @param phoneNumberId - ID del número de WhatsApp del bot
-   */
-  public async showFunctionDetailMenu(from: string, messageId: string, phoneNumberId: string): Promise<void> {
-    // Construye el objeto de mensaje interactivo con botones
-    const menuMessage = {
-      messaging_product: 'whatsapp',
-      to: from,
-      type: 'interactive',
-      interactive: {
-        type: 'button',
-        header: { type: 'text', text: '📄 Detalle de Funciones' },
-        body: { text: 'Adicionalmente, ¿deseas que el certificado detalle tus funciones en el cargo?\n\n✅ **Sí, incluir funciones**\n❌ **No, omitir funciones**\n\n💡 También puedes escribir: "con funciones", "sin funciones" o "finalizar"' },
-        action: {
-          buttons: [
-            { type: 'reply', reply: { id: 'cert_con_funciones', title: '✅ Sí, con funciones' } },
-            { type: 'reply', reply: { id: 'cert_sin_funciones', title: '❌ No, sin funciones' } }
-          ]
-        }
-      }
-    };
-
-    // Envía el menú interactivo y registra la acción
-    await this.sendInteractiveMenuAndLog(from, menuMessage, 'detalle de funciones');
-
-    // Actualiza el estado de la sesión del usuario
-    this.sessionManager.updateSessionState(from, SessionState.WAITING_FUNCTION_DETAIL_CHOICE);
-    this.logger.log(`Session state for ${from} updated to WAITING_FUNCTION_DETAIL_CHOICE.`);
   }
 
   /**
@@ -287,78 +276,61 @@ export class CertificateConversationFlowService {
       return;
     }
 
-    // Maneja la selección del tipo de certificado (con/sin sueldo)
+    // Maneja la selección del tipo de certificado
     if (session.state === SessionState.WAITING_CERTIFICATE_TYPE) {
-      let selectedSalaryTypeKey: string | undefined;
-      let selectedSalaryTypeDisplay: string | undefined;
+      let finalCertificateType: string | undefined;
+      let finalCertificateTypeDisplay: string | undefined;
 
       // Determina qué tipo de certificado seleccionó el usuario
-      if (input === 'con sueldo' || input === 'cert_con_sueldo') {
-        selectedSalaryTypeKey = 'con_sueldo';
-        selectedSalaryTypeDisplay = 'Con Sueldo';
-      } else if (input === 'sin sueldo' || input === 'cert_sin_sueldo') {
-        selectedSalaryTypeKey = 'sin_sueldo';
-        selectedSalaryTypeDisplay = 'Sin Sueldo';
+      // Acepta: IDs del menú, números, o texto descriptivo
+      if (input === 'cert_con_sueldo' || input === '1' || 
+          input.includes('certificado con salario') || input.includes('con salario')) {
+        finalCertificateType = 'con_sueldo_sin_funciones';
+        finalCertificateTypeDisplay = 'Certificado laboral con salario';
+      } else if (input === 'cert_sin_sueldo' || input === '2' || 
+                 input.includes('certificado sin salario') || input.includes('sin salario')) {
+        finalCertificateType = 'sin_sueldo_sin_funciones';
+        finalCertificateTypeDisplay = 'Certificado laboral sin salario';
+      } else if (input === 'cert_con_funciones' || input === '3' || 
+                 input.includes('certificado con funciones') || input.includes('con funciones')) {
+        finalCertificateType = 'sin_sueldo_con_funciones';
+        finalCertificateTypeDisplay = 'Certificado laboral con funciones';
       } else {
         // Si la selección no es válida, muestra el menú nuevamente
-        await this.sendMessageAndLog(from, 'Opción no válida. Por favor, elige una de las opciones del menú o escribe "finalizar".', messageId, phoneNumberId);
+        await this.sendMessageAndLog(from, 'Opción no válida. Por favor, selecciona una opción del menú, escribe el número (1, 2, 3) o el tipo de certificado, o escribe "finalizar".', messageId, phoneNumberId);
         await this.showCertificateMenu(from, messageId, phoneNumberId); 
         return;
       }
 
-      // Guarda la selección en la sesión y muestra el siguiente menú
-      session.selectedSalaryTypeKey = selectedSalaryTypeKey;
-      session.selectedSalaryTypeDisplay = selectedSalaryTypeDisplay;
-      this.logger.log(`User ${from} selected salary type: ${selectedSalaryTypeDisplay}.`);
-      await this.showFunctionDetailMenu(from, messageId, phoneNumberId);
-
-    } 
-    // Maneja la selección de incluir o no funciones
-    else if (session.state === SessionState.WAITING_FUNCTION_DETAIL_CHOICE) {
-      let selectedFunctionDetailKey: string | undefined;
-      let selectedFunctionDetailDisplay: string | undefined;
-
-      // Determina si el usuario quiere incluir funciones
-      if (input === 'con funciones' || input === 'sí, con funciones' || input === 'cert_con_funciones') {
-        selectedFunctionDetailKey = 'con_funciones';
-        selectedFunctionDetailDisplay = 'Con Funciones';
-      } else if (input === 'sin funciones' || input === 'no, sin funciones' || input === 'cert_sin_funciones') {
-        selectedFunctionDetailKey = 'sin_funciones';
-        selectedFunctionDetailDisplay = 'Sin Funciones';
-      } else {
-        // Si la selección no es válida, muestra el menú nuevamente
-        await this.sendMessageAndLog(from, 'Opción no válida. Por favor, elige una de las opciones del menú o escribe "finalizar".', messageId, phoneNumberId);
-        await this.showFunctionDetailMenu(from, messageId, phoneNumberId); 
-        return;
-      }
-
-      // Valida que exista la selección previa del tipo de certificado
-      const { selectedSalaryTypeKey, selectedSalaryTypeDisplay } = session;
-      if (!selectedSalaryTypeKey || !selectedSalaryTypeDisplay) {
-        this.logger.error(`selectedSalaryType no encontrado en sesión para ${from}. Session: ${JSON.stringify(session)}`);
-        await this.sendMessageAndLog(from, 'Hubo un error procesando tu solicitud. Por favor, inicia de nuevo.', messageId, phoneNumberId);
-        this.sessionManager.updateSessionState(from, SessionState.AUTHENTICATED); 
-        return;
-      }
-
-      // Combina las selecciones para crear el tipo final de certificado
-      const finalCertificateType = `${selectedSalaryTypeKey}_${selectedFunctionDetailKey}`;
-      const finalCertificateTypeDisplay = `${selectedSalaryTypeDisplay} y ${selectedFunctionDetailDisplay}`;
-      this.logger.log(`User ${from} selected function detail. Final type: ${finalCertificateType}`);
-
-      // Limpia las selecciones temporales
-      session.selectedSalaryTypeKey = undefined;
-      session.selectedSalaryTypeDisplay = undefined;
-
+      this.logger.log(`User ${from} selected certificate type: ${finalCertificateTypeDisplay}. Input was: "${body}"`);
+      
       await this.processCertificateRequest(
         from, 
         finalCertificateTypeDisplay, 
-        finalCertificateType,        
+        finalCertificateType,
         messageId, 
         phoneNumberId,
         onGenericAuthenticatedStateCallback
       );
-    } else {
+
+    } 
+    // Maneja la selección de acción final (después de generar certificado)
+    else if (session.state === SessionState.WAITING_FINAL_ACTION) {
+      if (input === 'generate_another' || input === 'otro' || input === 'certificado') {
+        this.logger.log(`User ${from} requested another certificate. Showing certificate menu.`);
+        await this.showCertificateMenu(from, messageId, phoneNumberId);
+      } else if (input === 'finish_session' || input === 'finalizar') {
+        this.logger.log(`User ${from} requested session termination from final menu.`);
+        this.sessionManager.clearSession(from);
+        await this.sendMessageAndLog(from, 'Sesión finalizada. ¡Gracias por usar nuestros servicios! 👋', messageId, phoneNumberId);
+      } else {
+        // Si la selección no es válida, muestra el menú nuevamente
+        await this.sendMessageAndLog(from, 'Opción no válida. Por favor, selecciona "📄 Otro Certificado", "🚪 Finalizar" o escribe "otro"/"finalizar".', messageId, phoneNumberId);
+        await this.showFinalActionMenu(from, messageId, phoneNumberId); 
+        return;
+      }
+    } 
+    else {
       this.logger.warn(`handleMenuSelection llamado en estado inesperado: ${session.state} para ${from}. Input: "${body}".`);
       await this.sendMessageAndLog(from, "No entendí tu respuesta. Por favor, selecciona una opción de un menú o escribe \"finalizar\".", messageId, phoneNumberId);
     }
@@ -405,7 +377,9 @@ export class CertificateConversationFlowService {
     }
 
     this.logger.log(`Iniciando processCertificateRequest para ${from}. Tipo: ${finalCertificateTypeKey}`);
-    const loadingMessage = `⏳ Un momento por favor, estoy generando su certificado ${certificateDisplayInfo}...`;
+    const loadingMessage = `⏳ Procesando tu solicitud de certificado laboral solicitado
+
+Por favor espera un momento.`;
     await this.sendMessageAndLog(from, loadingMessage, messageId, phoneNumberId);
 
     try {
@@ -487,21 +461,102 @@ export class CertificateConversationFlowService {
       );
 
       if (success) {
-        const maskedEmail = session.email.split('@').length > 1 ? 
-            session.email.split('@')[0].substring(0,1) + '***@' + session.email.split('@')[1] :
-            'email inválido'; 
-        const successMessage = `✅ ¡Tu certificado ${certificateDisplayInfo} ha sido generado y enviado a ${maskedEmail}!\n\nRevisa tu bandeja de entrada (y spam). Si no lo recibes en 5 minutos, contacta a RRHH.\n\n¿Necesitas algo más?`;
+        const currentDate = new Date();
+        const formattedDate = currentDate.toLocaleDateString('es-CO');
+        const formattedTime = currentDate.toLocaleTimeString('es-CO');
+        
+        const successMessage = `✅ *CERTIFICADO GENERADO EXITOSAMENTE*
+
+📋 *Detalles de la solicitud:*
+* Nombre: ${session.clientName}
+* Documento: ${session.documentType} ${session.documentNumber}
+* Tipo: ${certificateDisplayInfo}
+* Fecha: ${formattedDate}
+* Hora: ${formattedTime}
+
+📧 *El certificado ha sido enviado a:* ${session.email}
+
+¿Necesitas algo más? Puedes solicitar otro certificado o finalizar la conversación.`;
         await this.sendMessageAndLog(from, successMessage, messageId, phoneNumberId);
         this.transcriptionService.clearConversation(from); 
+        
+        // Mostrar menú final con botones en lugar del callback genérico
+        await this.showFinalActionMenu(from, messageId, phoneNumberId);
       } else {
         await this.sendMessageAndLog(from, 'Lo siento, hubo un error al generar o enviar tu certificado. Intenta más tarde o contacta a RRHH.', messageId, phoneNumberId);
+        this.sessionManager.updateSessionState(from, SessionState.AUTHENTICATED);
+        await onGenericAuthenticatedStateCallback();
       }
-      this.sessionManager.updateSessionState(from, SessionState.AUTHENTICATED);
 
     } catch (error) {
       this.logger.error(`Error en processCertificateRequest para ${from}:`, error instanceof Error ? error.message : String(error), error instanceof Error ? error.stack : undefined);
       await this.sendMessageAndLog(from, '❌ Ocurrió un error inesperado. Contacta a soporte.', messageId, phoneNumberId);
       this.sessionManager.updateSessionState(from, SessionState.AUTHENTICATED);
+      await onGenericAuthenticatedStateCallback();
     }
+  }
+
+  /**
+   * Muestra los botones finales después de generar un certificado exitosamente
+   * @param from - Número de WhatsApp del usuario
+   * @param messageId - ID del mensaje de WhatsApp
+   * @param phoneNumberId - ID del número de WhatsApp del bot
+   */
+  public async showFinalActionMenu(from: string, messageId: string, phoneNumberId: string): Promise<void> {
+    // Construye el objeto de mensaje interactivo con botones finales
+    const finalMenuMessage = {
+      messaging_product: 'whatsapp',
+      to: from,
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        header: { type: 'text', text: '✅ Certificado Completado' },
+        body: { 
+          text: '¿Qué deseas hacer ahora?\n\n💡 *Selecciona una opción o escribe:*\n• "otro" para generar otro certificado\n• "finalizar" para terminar' 
+        },
+        action: {
+          buttons: [
+            { 
+              type: 'reply', 
+              reply: { 
+                id: 'generate_another', 
+                title: '📄 Otro Certificado' 
+              } 
+            },
+            { 
+              type: 'reply', 
+              reply: { 
+                id: 'finish_session', 
+                title: '🚪 Finalizar' 
+              } 
+            }
+          ]
+        }
+      }
+    };
+
+    // Intenta enviar el menú interactivo primero
+    try {
+      await this.sendInteractiveMenuAndLog(from, finalMenuMessage, 'acción final');
+    } catch (error) {
+      this.logger.error(`Failed to send final action menu to ${from}, falling back to text message:`, error instanceof Error ? error.message : String(error));
+      
+      // Fallback a mensaje de texto simple
+      const fallbackMessage = `✅ **Certificado Completado**
+
+¿Qué deseas hacer ahora?
+
+*Opciones disponibles:*
+📄 Generar otro certificado - Escribe "otro" o "certificado"
+🚪 Finalizar conversación - Escribe "finalizar"
+
+💡 **Elige una opción o espera 5 minutos para que la sesión expire automáticamente.**`;
+
+      await this.sendMessageAndLog(from, fallbackMessage, messageId, phoneNumberId);
+    }
+
+    // Actualiza el estado de la sesión del usuario
+    this.sessionManager.updateSessionState(from, SessionState.WAITING_FINAL_ACTION);
+    this.logger.log(`Session state for ${from} updated to WAITING_FINAL_ACTION.`);
   }
 } 
