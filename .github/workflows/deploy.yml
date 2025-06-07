@@ -23,13 +23,27 @@ jobs:
         script: |
           echo "🚀 Iniciando despliegue en servidor..."
           
-          # Navegar al directorio del proyecto
-          cd /home/ubuntu/omp_chatbox || {
+          # Configurar PATH para Node.js y npm
+          export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+          export NVM_DIR="$HOME/.nvm"
+          if [ -s "$NVM_DIR/nvm.sh" ]; then
+            . "$NVM_DIR/nvm.sh"
+            nvm use node || nvm use default
+          fi
+          
+          # Verificar que Node.js y npm estén disponibles
+          echo "🔍 Verificando Node.js y npm..."
+          node --version || echo "⚠️ Node.js no encontrado"
+          npm --version || echo "⚠️ npm no encontrado"
+          
+          # Navegar al directorio del proyecto (nombre correcto)
+          cd /home/ubuntu/chatbox_omp || {
             echo "❌ Error: Directorio del proyecto no encontrado"
             echo "🔧 Creando directorio del proyecto..."
-            mkdir -p /home/ubuntu/omp_chatbox
-            cd /home/ubuntu/omp_chatbox
-            git clone https://github.com/${{ github.repository }}.git .
+            mkdir -p /home/ubuntu/chatbox_omp
+            cd /home/ubuntu/chatbox_omp
+            git init
+            git remote add origin https://github.com/${{ github.repository }}.git
           }
           
           # Hacer backup del .env actual (si existe)
@@ -44,9 +58,18 @@ jobs:
           
           # Actualizar código desde GitHub
           echo "📥 Actualizando código desde GitHub..."
-          git fetch origin
-          git reset --hard origin/main
-          git pull origin main
+          if [ -d .git ]; then
+            git fetch origin
+            git reset --hard origin/main
+            git pull origin main
+          else
+            echo "🔧 Inicializando repositorio git..."
+            git init
+            git remote add origin https://github.com/${{ github.repository }}.git
+            git fetch origin
+            git checkout -b main
+            git reset --hard origin/main
+          fi
           
           # Decodificar y restaurar variables de entorno
           echo "🔧 Configurando variables de entorno..."
@@ -63,6 +86,17 @@ jobs:
           fi
           
           echo "✅ Variables de entorno configuradas"
+          
+          # Verificar que npm esté disponible antes de continuar
+          if ! command -v npm &> /dev/null; then
+            echo "❌ Error: npm no está disponible"
+            echo "🔧 Intentando cargar Node.js..."
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm install --lts
+            nvm use --lts
+          fi
           
           # Instalar/actualizar dependencias EN EL SERVIDOR
           echo "📦 Instalando dependencias en el servidor..."
