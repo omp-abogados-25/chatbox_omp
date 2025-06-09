@@ -82,13 +82,8 @@ export class InitialAuthenticationFlowService {
    * @returns {Promise<void>}
    */
   private async sendWelcomeMessageInternal(from: string, messageId: string, phoneNumberId: string, session: SessionWithAllData, profile?: any): Promise<void> {
-    const welcomeMessage = `¡Hola! 👋 Bienvenido al sistema de #OMPLovers
+    const welcomeMessage = `¡Hola! 👋 soy Gaby de #OMPLovers
 Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de manera rápida y segura.
-
-🔐 *¿Sabías que?* 
-* Puedes escribir directamente: "Necesito un certificado laboral"
-* O también: "Mi cédula es 12345678"
-* ¡El sistema es inteligente y te entenderá!
 
 📝 Para comenzar, ingresa tu número de documento:`;
     
