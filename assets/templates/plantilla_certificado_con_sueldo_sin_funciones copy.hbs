@@ -321,6 +321,32 @@
         .c11 {
             padding-bottom: 8px;
         }
+
+        /* Clases sin interlineado para firma */
+        .c9-firma {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            margin: 0;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        .c11-firma {
+            font-weight: 400;
+            font-size: 11pt;
+            padding-bottom: 0px;
+            margin: 0;
+        }
+
+        .c12-firma {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            margin: 0;
+            orphans: 2;
+            widows: 2;
+            text-align: justify;
+        }
     </style>
 </head>
 
@@ -337,7 +363,7 @@
                 <span class="c0"> de {{cityDocument}}</span>
                 <span class="c0">, se encuentra vinculado a través de contrato a término indefinido en esta oficina de
                     abogados </span>
-                <span class="c3">OLFA MARÍA PÉREZ ORELLANOS E HIJOS ABOGADOS S.A.S.</span>
+                <span class="c3">OLFA MARIA PEREZ ORELLANOS ABOGADOS S.A.S</span>
                 <span class="c0"> con NIT. </span>
                 <span class="c3">900.710.007-2</span>
                 <span class="c0"> cuyo objeto social es la prestación de servicios jurídicos profesionales a compañías
@@ -360,14 +386,14 @@
     </div>
     <div class="fondo-footer">
         <div class="contenido-footer">
-            <p class="c9 c11"><span class="c2 c0">Cordialmente, </span></p>
+            <p class="c9-firma c11-firma"><span class="c2 c0">Cordialmente, </span></p>
             <!-- Firma -->
             <div class="firma">
                 <img src="{{firmaPath}}" alt="Firma">
             </div>
-            <p class="c9"><span class="c2 c0">{{nameFirmante}}</span></p>
-            <p class="c9"><span class="c2 c0">{{positionFirmante}}</span></p>
-            <p class="c12"><span class="c2 c3">OMP Abogados</span></p>
+            <p class="c9-firma"><span class="c2 c0">{{nameFirmante}}</span></p>
+            <p class="c9-firma"><span class="c2 c0">{{positionFirmante}}</span></p>
+            <p class="c12-firma"><span class="c2 c3">OMP Abogados</span></p>
         </div>
     </div>
 </body>

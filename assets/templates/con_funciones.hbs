@@ -195,6 +195,32 @@
             padding-bottom: 8px;
         }
 
+        /* Clases sin interlineado para firma */
+        .c9-firma {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            margin: 0;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        .c11-firma {
+            font-weight: 400;
+            font-size: 11pt;
+            padding-bottom: 0px;
+            margin: 0;
+        }
+
+        .c12-firma {
+            padding-top: 0pt;
+            padding-bottom: 0pt;
+            margin: 0;
+            orphans: 2;
+            widows: 2;
+            text-align: justify;
+        }
+
         .c3 {
             font-weight: 700;
             font-size: 14pt;
@@ -437,7 +463,7 @@
                 <span class="c0">, se encuentra vinculado a trav&eacute;s de contrato a t&eacute;rmino indefinido en
                     esta oficina de
                     abogados </span>
-                <span class="c3">OLFA MAR&Iacute;A P&Eacute;REZ ORELLANOS E HIJOS ABOGADOS S.A.S.</span>
+                <span class="c3">OLFA MARIA PEREZ ORELLANOS ABOGADOS S.A.S</span>
                 <span class="c0"> con NIT. </span>
                 <span class="c3">900.710.007-2</span>
                 <span class="c0"> cuyo objeto social es la prestaci&oacute;n de servicios jur&iacute;dicos
@@ -519,13 +545,13 @@
         // El script anterior se reemplaza completamente por este para asegurar su integridad:
         document.addEventListener('DOMContentLoaded', function () {
             const signatureInnerHtml = `
-        <p class="c9 c11"><span class="c2 c0">Cordialmente, </span></p>
+        <p class="c9-firma c11-firma"><span class="c2 c0">Cordialmente, </span></p>
         <div class="firma">
             <img src="{{firmaImageFileUrl}}" alt="Firma OMP Abogados">
         </div>
-        <p class="c9 c11"><span class="c2 c0">{{nameFirmante}}</span></p>
-        <p class="c9 c11"><span class="c2 c0">{{positionFirmante}}</span></p>
-        <p class="c12"><span class="c2 c3">OMP Abogados</span></p>
+        <p class="c9-firma c11-firma"><span class="c2 c0">{{nameFirmante}}</span></p>
+        <p class="c9-firma c11-firma"><span class="c2 c0">{{positionFirmante}}</span></p>
+        <p class="c12-firma"><span class="c2 c3">OMP Abogados</span></p>
     `;
 
             function countRenderedLinesInContainer(container) {
