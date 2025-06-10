@@ -7,6 +7,7 @@ import { IMessageAnalysisService, IWhatsAppProfileService, MessageContext } from
 import { MessageIntent } from '../../domain/entities/message-intent.entity';
 
 import { SessionWithAllData } from '../../domain/types/session-data.types';
+import { formatDateForColombia } from '../../../utils/timezone.utils';
 
 // Servicios de flujo de conversación especializados
 import { MfaConversationFlowService } from './mfa-conversation-flow.service';
@@ -166,7 +167,7 @@ export class ConversationService {
       blockDetail = `Razón: ${blacklistedInfo.reason}.`;
     }
     let blockMessage = blacklistedInfo?.expiresAt 
-      ? `🚫 Tu número (${from}) está temporalmente bloqueado hasta ${new Date(blacklistedInfo.expiresAt).toLocaleString('es-CO', { timeZone: 'America/Bogota' })}.\n${blockDetail}`
+      ? `🚫 Tu número (${from}) está temporalmente bloqueado hasta ${formatDateForColombia(new Date(blacklistedInfo.expiresAt))}.\n${blockDetail}`
       : `🚫 Tu número (${from}) está permanentemente bloqueado.\n${blockDetail}`;
     blockMessage += "\n\nSi consideras que esto es un error, por favor contacta a Recursos Humanos o al departamento de TI.";
     

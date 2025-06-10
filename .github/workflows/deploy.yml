@@ -23,6 +23,10 @@ jobs:
         script: |
           echo "🚀 Iniciando despliegue en servidor..."
           
+          # Configurar zona horaria del sistema para Colombia
+          echo "🕐 Configurando zona horaria a Colombia..."
+          sudo timedatectl set-timezone America/Bogota 2>/dev/null || echo "⚠️ No se pudo cambiar zona horaria del sistema (puede requerir permisos root)"
+          
           # Configurar PATH para Node.js y npm
           export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
           export NVM_DIR="$HOME/.nvm"

@@ -8,11 +8,13 @@ module.exports = {
     max_memory_restart: '1G',
     env: {
       NODE_ENV: 'development',
-      PORT: 3000
+      PORT: 3000,
+      TZ: 'America/Bogota'
     },
     env_production: {
       NODE_ENV: 'production',
-      PORT: 3000
+      PORT: 3000,
+      TZ: 'America/Bogota'
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',
