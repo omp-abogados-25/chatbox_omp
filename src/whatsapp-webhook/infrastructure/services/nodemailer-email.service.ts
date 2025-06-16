@@ -6,6 +6,22 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { TClient } from 'src/whatsapp-webhook/domain';
 
+// Interface para el resultado de detección de género
+interface GenderResult {
+  gender: 'male' | 'female' | 'unknown';
+  probability: number;
+  isIdentified: string; // "identificado" or "identificada"
+}
+
+// Interface para la respuesta de la API de Genderize.io
+interface GenderizeApiResponse {
+  name: string;
+  gender: 'male' | 'female' | null;
+  probability: number;
+  count: number;
+  country_id?: string;
+}
+
 import { TemplateService } from './template.service';
 import { Api2PdfService } from './api2pdf.service';
 
@@ -57,6 +73,88 @@ export class NodemailerEmailService implements IEmailService {
     });
 
     this.logger.log(`Email service initialized with host: ${config.host}`);
+  }
+
+  /**
+   * Detecta el género basado en el nombre completo usando la API de Genderize.io
+   * @param fullName - Nombre completo de la persona
+   * @returns Resultado de la detección de género
+   */
+  private async detectGender(fullName: string): Promise<GenderResult> {
+    try {
+      // Extraer el primer nombre del nombre completo
+      const firstName = this.extractFirstName(fullName);
+      
+      if (!firstName) {
+        this.logger.warn(`No se pudo extraer primer nombre de: ${fullName}`);
+        return this.getDefaultGenderResult();
+      }
+
+      this.logger.log(`Detectando género para el nombre: ${firstName}`);
+      
+      // Llamar a la API de Genderize.io con localización para Colombia
+      const apiUrl = `https://api.genderize.io?name=${encodeURIComponent(firstName)}&country_id=CO`;
+      
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        this.logger.error(`Error en la API de Genderize.io: ${response.status} ${response.statusText}`);
+        return this.getDefaultGenderResult();
+      }
+
+      const result: GenderizeApiResponse = await response.json();
+      
+      this.logger.log(`Resultado de detección de género: ${JSON.stringify(result)}`);
+
+      if (result.gender === 'male') {
+        return {
+          gender: 'male',
+          probability: result.probability,
+          isIdentified: 'identificado'
+        };
+      } else if (result.gender === 'female') {
+        return {
+          gender: 'female',
+          probability: result.probability,
+          isIdentified: 'identificada'
+        };
+      } else {
+        // Si no se puede determinar, usar masculino como default (convención del español)
+        this.logger.warn(`No se pudo determinar género para: ${firstName}. Usando masculino por defecto.`);
+        return this.getDefaultGenderResult();
+      }
+
+    } catch (error) {
+      this.logger.error(`Error detectando género para ${fullName}:`, error);
+      return this.getDefaultGenderResult();
+    }
+  }
+
+  /**
+   * Extrae el primer nombre de un nombre completo
+   * @param fullName - Nombre completo
+   * @returns Primer nombre
+   */
+  private extractFirstName(fullName: string): string {
+    if (!fullName) return '';
+    
+    // Limpiar el nombre y dividir por espacios
+    const nameParts = fullName.trim().split(/\s+/);
+    
+    // Retornar el primer elemento (primer nombre)
+    return nameParts[0] || '';
+  }
+
+  /**
+   * Retorna el resultado por defecto cuando no se puede determinar el género
+   * @returns Resultado por defecto (masculino)
+   */
+  private getDefaultGenderResult(): GenderResult {
+    return {
+      gender: 'unknown',
+      probability: 0,
+      isIdentified: 'identificado' // Usar masculino como default en español
+    };
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
@@ -225,6 +323,10 @@ export class NodemailerEmailService implements IEmailService {
         currentDateFormatted
       } = this.getFormattedCertificateDates();
       
+      // Detectar género basado en el nombre del cliente
+      const genderResult: GenderResult = await this.detectGender(clientData.name);
+      this.logger.log(`[NodemailerEmailService] Género detectado: ${genderResult.gender}, Probabilidad: ${genderResult.probability}, Identificado/a: ${genderResult.isIdentified}`);
+      
       // Determinar qué firmante usar basado en el documento del cliente
       const signerData = this.getSignerData(clientData.documentNumber);
       
@@ -281,7 +383,10 @@ export class NodemailerEmailService implements IEmailService {
           firmaImageFileUrl: firmaImageFileUrl,
           nameFirmante: signerData.nombre,
           positionFirmante: signerData.cargo,
-          functionCategories: functionCategories, 
+          functionCategories: functionCategories,
+          // Información de género
+          isIdentified: genderResult.isIdentified,
+          genderProbability: genderResult.probability,
         };
 
         finalHtmlForPdf = await this.templateService.compileCertificateTemplate(
@@ -319,6 +424,9 @@ export class NodemailerEmailService implements IEmailService {
           firmaImageFileUrl: firmaImageFileUrl,
           nameFirmante: signerData.nombre,
           positionFirmante: signerData.cargo,
+          // Información de género
+          isIdentified: genderResult.isIdentified,
+          genderProbability: genderResult.probability,
         };
         
         finalHtmlForPdf = await this.templateService.compileCertificateTemplate(
