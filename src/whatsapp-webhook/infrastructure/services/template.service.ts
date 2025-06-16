@@ -56,9 +56,15 @@ export class TemplateService {
           if (path && (path.startsWith('assets/') || path.startsWith('file:///'))) {
               if (!uniqueAssetPaths.includes(path)) {
                 uniqueAssetPaths.push(path);
+                this.logger.debug(`Encontrado asset para embeber: ${path}`);
               }
           }
       }
+
+      this.logger.log(`Total de assets únicos encontrados: ${uniqueAssetPaths.length}`);
+      uniqueAssetPaths.forEach(assetPath => {
+        this.logger.debug(`Asset: ${assetPath}`);
+      });
 
       const dataUrlMap = new Map<string, string>();
       await Promise.all(
@@ -86,6 +92,8 @@ export class TemplateService {
   private async assetToDataUrl(assetPath: string, projectRootDir: string): Promise<string> {
       let absoluteAssetPath: string;
 
+      this.logger.debug(`Procesando asset: ${assetPath}`);
+
       if (assetPath.startsWith('file:///')) {
           const decodedPath = decodeURIComponent(assetPath);
           // Handle path differences between Windows and Linux
@@ -94,13 +102,17 @@ export class TemplateService {
           } else {
               absoluteAssetPath = '/' + decodedPath.substring('file:///'.length);
           }
+          this.logger.debug(`Ruta absoluta desde file:/// : ${absoluteAssetPath}`);
       } else if (assetPath.startsWith('assets/')) {
           absoluteAssetPath = path.resolve(projectRootDir, assetPath);
+          this.logger.debug(`Ruta absoluta desde assets/: ${absoluteAssetPath}`);
       } else {
+          this.logger.debug(`Asset no procesable: ${assetPath}`);
           return assetPath; // Not a path we can process
       }
 
       try {
+          this.logger.debug(`Intentando leer archivo: ${absoluteAssetPath}`);
           const fileData = await fs.readFile(absoluteAssetPath);
           const base64 = fileData.toString('base64');
           const ext = path.extname(absoluteAssetPath).substring(1).toLowerCase();
@@ -113,11 +125,14 @@ export class TemplateService {
           
           const mimeType = mimeTypes[ext];
           if (mimeType) {
-              return `data:${mimeType};base64,${base64}`;
+              const dataUrl = `data:${mimeType};base64,${base64}`;
+              this.logger.log(`Asset ${ext.toUpperCase()} embebido exitosamente: ${assetPath} (${Math.round(base64.length/1024)}KB)`);
+              return dataUrl;
           }
           this.logger.warn(`Unsupported asset extension for embedding: ${ext} for path ${assetPath}`);
       } catch (error) {
           this.logger.error(`Failed to read and embed asset '${absoluteAssetPath}': ${error.message}`);
+          this.logger.error(`Stack trace:`, error.stack);
       }
 
       return assetPath; // Return original path on error or if unsupported

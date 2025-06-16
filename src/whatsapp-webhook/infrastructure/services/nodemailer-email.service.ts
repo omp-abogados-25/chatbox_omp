@@ -2,9 +2,12 @@ import { Injectable, Logger, Inject } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { IEmailService, EmailOptions } from '../../domain/interfaces/email.interface';
 import { getEmailConfig } from '../config/email.config';
-import * as fs from 'fs/promises'; 
+import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import * as path from 'path';
 import { TClient } from 'src/whatsapp-webhook/domain';
+
+
 
 import { TemplateService } from './template.service';
 import { Api2PdfService } from './api2pdf.service';
@@ -57,6 +60,61 @@ export class NodemailerEmailService implements IEmailService {
     });
 
     this.logger.log(`Email service initialized with host: ${config.host}`);
+  }
+
+  /**
+   * Detecta el género basado en el primer nombre usando Genderize.io
+   */
+  private async detectGender(fullName: string): Promise<string> {
+    try {
+      const firstName = this.extractFirstName(fullName);
+      this.logger.log(`Detectando género para el nombre: ${firstName}`);
+
+      const response = await fetch(`https://api.genderize.io?name=${firstName}&country_id=CO`);
+      
+      if (!response.ok) {
+        this.logger.warn(`Error en la API de Genderize: ${response.status}`);
+        return this.getDefaultGenderResult();
+      }
+
+      const data = await response.json();
+      this.logger.log(`Respuesta de Genderize:`, data);
+
+      if (data.gender === 'male') {
+        return 'identificado';
+      } else if (data.gender === 'female') {
+        return 'identificada';
+      } else {
+        this.logger.log(`Género no determinado para ${firstName}, usando valor por defecto`);
+        return this.getDefaultGenderResult();
+      }
+    } catch (error) {
+      this.logger.error(`Error detectando género: ${error.message}`);
+      return this.getDefaultGenderResult();
+    }
+  }
+
+  /**
+   * Extrae el primer nombre de un nombre completo
+   */
+  private extractFirstName(fullName: string): string {
+    if (!fullName || typeof fullName !== 'string') {
+      this.logger.warn('Nombre completo no válido, usando valor por defecto');
+      return 'Persona';
+    }
+
+    // Dividir por espacios y tomar la primera palabra
+    const firstName = fullName.trim().split(' ')[0];
+    this.logger.log(`Primer nombre extraído: ${firstName} de nombre completo: ${fullName}`);
+    
+    return firstName;
+  }
+
+  /**
+   * Retorna el resultado por defecto para género
+   */
+  private getDefaultGenderResult(): string {
+    return 'identificado'; // Masculino por defecto
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
@@ -225,18 +283,21 @@ export class NodemailerEmailService implements IEmailService {
         currentDateFormatted
       } = this.getFormattedCertificateDates();
       
+      // Detectar género basado en el nombre del cliente
+      const isIdentified: string = await this.detectGender(clientData.name);
+      this.logger.log(`[NodemailerEmailService] Género detectado: ${isIdentified}`);
+      
       // Determinar qué firmante usar basado en el documento del cliente
       const signerData = this.getSignerData(clientData.documentNumber);
       
       const currentTime = new Date().toLocaleTimeString('es-CO');
       const projectRootDir = path.resolve(__dirname, '../../../../');
-      const fontsBaseFileUrl = `file:///${path.resolve(projectRootDir, 'assets/fonts').replace(/\\/g, '/')}`;
+      
       const headerImageFileUrl = `file:///${path.resolve(projectRootDir, HEADER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
       const footerImageFileUrl = `file:///${path.resolve(projectRootDir, FOOTER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
       const firmaImageFileUrl = `file:///${path.resolve(projectRootDir, signerData.imagePath).replace(/\\/g, '/')}`;
       const logoOmpForEmailPath = path.resolve(projectRootDir, LOGO_OMP_PATH_RELATIVE);
 
-      this.logger.debug(`Fonts Base URL: ${fontsBaseFileUrl}`);
       this.logger.debug(`Header Image URL: ${headerImageFileUrl}`);
       this.logger.debug(`Footer Image URL: ${footerImageFileUrl}`);
       this.logger.debug(`Firma Image URL: ${firmaImageFileUrl}`);
@@ -275,13 +336,14 @@ export class NodemailerEmailService implements IEmailService {
               transportationAllowanceInLetters: (clientData as any).transportationAllowanceInLetters,
               transportationAllowanceFormatCurrency: (clientData as any).transportationAllowanceFormatCurrency
           } : {}),
-          fontsBaseUrl: fontsBaseFileUrl,
           headerImageFileUrl: headerImageFileUrl,
           footerImageFileUrl: footerImageFileUrl,
           firmaImageFileUrl: firmaImageFileUrl,
           nameFirmante: signerData.nombre,
           positionFirmante: signerData.cargo,
-          functionCategories: functionCategories, 
+          functionCategories: functionCategories,
+          // Información de género
+          isIdentified: isIdentified,
         };
 
         finalHtmlForPdf = await this.templateService.compileCertificateTemplate(
@@ -313,12 +375,13 @@ export class NodemailerEmailService implements IEmailService {
               transportationAllowanceInLetters: (clientData as any).transportationAllowanceInLetters,
               transportationAllowanceFormatCurrency: (clientData as any).transportationAllowanceFormatCurrency
           } : {}),
-          fontsBaseUrl: fontsBaseFileUrl,
           headerImageFileUrl: headerImageFileUrl,
           footerImageFileUrl: footerImageFileUrl,
           firmaImageFileUrl: firmaImageFileUrl,
           nameFirmante: signerData.nombre,
           positionFirmante: signerData.cargo,
+          // Información de género
+          isIdentified: isIdentified,
         };
         
         finalHtmlForPdf = await this.templateService.compileCertificateTemplate(

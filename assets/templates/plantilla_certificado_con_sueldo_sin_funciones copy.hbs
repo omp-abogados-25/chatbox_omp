@@ -4,40 +4,18 @@
 <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Fonts - Roboto Condensed (similar a Arial Narrow) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <style type="text/css">
+    @import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&display=swap');
         * {
-            font-family: 'Arial Narrow', Arial, sans-serif !important;
+            font-family: 'Archivo Narrow', Arial, sans-serif;
             line-height: 1.5;
             margin: 0;
             padding: 0;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('fonts/arialnarrow.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('fonts/arialnarrow_bold.ttf') format('truetype');
-            font-weight: bold;
-            font-style: normal;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('fonts/arialnarrow_italic.ttf') format('truetype');
-            font-weight: normal;
-            font-style: italic;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('fonts/arialnarrow_bolditalic.ttf') format('truetype');
-            font-weight: bold;
-            font-style: italic;
+            box-sizing: border-box;
         }
 
         ol {
@@ -50,13 +28,84 @@
             padding: 0
         }
 
+        body {
+            font-family: 'Archivo Narrow', Arial, sans-serif;
+            background-color: #f0f0f0;
+            /* Un fondo para distinguir las páginas */
+        }
+
+        .pagina-documento {
+            width: 970.67px;
+            height: 1168.67px;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+            page-break-after: always;
+            position: relative;
+        }
+
+        .seccion-encabezado-fija {
+            background: url('{{headerImageFileUrl}}') no-repeat left top;
+            background-size: 100% 100%;
+            height: 550px;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .seccion-cuerpo-pagina {
+            padding: 180px 140px 80px 140px;
+            overflow: visible;
+            position: relative;
+            z-index: 2;
+            flex-grow: 1;
+        }
+
+        .seccion-contenido-firma {
+            height: 548px;
+            flex-shrink: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding-left: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .fondo-grafico-pie {
+            background: url('{{footerImageFileUrl}}') no-repeat left bottom;
+            background-size: contain;
+            height: 548px;
+            width: 100%;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .contenido-footer {
+            max-width: 400px;
+        }
+
+        .contenido-footer>p:last-child,
+        .contenido-footer>div:last-child>p:last-child {
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+
+        /* Estilos de texto preexistentes (c0 a c12, etc.) */
         .c5 {
             padding-top: 0pt;
             padding-bottom: 0pt;
             orphans: 2;
             widows: 2;
-            text-align: center;
-            height: 11pt
+            text-align: justify;
         }
 
         .c6 {
@@ -64,8 +113,7 @@
             padding-bottom: 0pt;
             orphans: 2;
             widows: 2;
-            text-align: left;
-            height: 11pt
+            text-align: justify;
         }
 
         .c9 {
@@ -78,10 +126,10 @@
 
         .c12 {
             padding-top: 0pt;
-            padding-bottom: 10pt;
+            padding-bottom: 0pt;
             orphans: 2;
             widows: 2;
-            text-align: left
+            text-align: justify;
         }
 
         .c4 {
@@ -90,6 +138,10 @@
             orphans: 2;
             widows: 2;
             text-align: justify
+        }
+
+        .c4:not(:last-child) {
+            margin-bottom: 1em;
         }
 
         .c10 {
@@ -117,208 +169,7 @@
 
         .c11 {
             font-weight: 400;
-            font-size: 11pt;
-            font-family: "Arial Narrow"
-        }
-
-        .c3 {
-            font-weight: 700;
             font-size: 14pt;
-            font-family: "Arial Narrow"
-        }
-
-        .c13 {
-            background-color: #ffffff;
-            max-width: 728pt;
-        }
-
-        .c0 {
-            font-size: 14pt;
-            font-weight: 400;
-            font-family: "Arial Narrow"
-        }
-
-        .c7 {
-            height: 30pt
-        }
-
-        .c1 {
-            background-color: #ffff00
-        }
-
-        .title {
-            padding-top: 24pt;
-            color: #000000;
-            font-weight: 700;
-            font-size: 36pt;
-            padding-bottom: 6pt;
-            font-family: "Calibri";
-            line-height: 1.5;
-            page-break-after: avoid;
-            orphans: 2;
-            widows: 2;
-            text-align: left
-        }
-
-        .subtitle {
-            padding-top: 18pt;
-            color: #666666;
-            font-size: 24pt;
-            padding-bottom: 4pt;
-            font-family: "Georgia";
-            line-height: 1.5;
-            page-break-after: avoid;
-            font-style: italic;
-            orphans: 2;
-            widows: 2;
-            text-align: left
-        }
-
-        li {
-            color: #000000;
-            font-size: 11pt;
-            font-family: "Calibri"
-        }
-
-        p {
-            margin: 0;
-            color: #000000;
-            font-size: 11pt;
-            font-family: "Calibri"
-        }
-
-        h1 {
-            padding-top: 24pt;
-            color: #000000;
-            font-weight: 700;
-            font-size: 24pt;
-            padding-bottom: 6pt;
-            font-family: "Calibri";
-            line-height: 1.5;
-            page-break-after: avoid;
-            orphans: 2;
-            widows: 2;
-            text-align: left
-        }
-
-        h2 {
-            padding-top: 18pt;
-            color: #000000;
-            font-weight: 700;
-            font-size: 18pt;
-            padding-bottom: 4pt;
-            font-family: "Calibri";
-            line-height: 1.5;
-            page-break-after: avoid;
-            orphans: 2;
-            widows: 2;
-            text-align: left
-        }
-
-        h3 {
-            padding-top: 14pt;
-            color: #000000;
-            font-weight: 700;
-            font-size: 14pt;
-            padding-bottom: 4pt;
-            font-family: "Calibri";
-            line-height: 1.5;
-            page-break-after: avoid;
-            orphans: 2;
-            widows: 2;
-            text-align: left
-        }
-
-        h4 {
-            padding-top: 12pt;
-            color: #000000;
-            font-weight: 700;
-            font-size: 12pt;
-            padding-bottom: 2pt;
-            font-family: "Calibri";
-            line-height: 1.5;
-            page-break-after: avoid;
-            orphans: 2;
-            widows: 2;
-            text-align: left
-        }
-
-        h5 {
-            padding-top: 11pt;
-            color: #000000;
-            font-weight: 700;
-            font-size: 11pt;
-            padding-bottom: 2pt;
-            font-family: "Calibri";
-            line-height: 1.5;
-            page-break-after: avoid;
-            orphans: 2;
-            widows: 2;
-            text-align: left
-        }
-
-        h6 {
-            padding-top: 10pt;
-            color: #000000;
-            font-weight: 700;
-            font-size: 10pt;
-            padding-bottom: 2pt;
-            font-family: "Calibri";
-            line-height: 1.5;
-            page-break-after: avoid;
-            orphans: 2;
-            widows: 2;
-            text-align: left
-        }
-
-        .fondo-encabezado {
-            background: url('{{headerPath}}') no-repeat left top;
-            background-size: contain;
-            min-height: 200px;
-            padding-top: 120px;
-        }
-
-        .contenido-certificado {
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 190px 130px 0px 130px;
-        }
-
-        p {
-            line-height: 1.5;
-        }
-
-        .fondo-footer {
-            background: url('{{footerPath}}') no-repeat left bottom;
-            background-size: contain;
-            min-height: 400px;
-            padding-bottom: 60px;
-        }
-
-        .contenido-footer {
-            max-width: 400px;
-            padding: 0px 130px;
-        }
-
-        .c3,
-        .c0,
-        .c11,
-        .c2,
-        .c12,
-        .c8,
-        .c9,
-        .c4,
-        .c5,
-        .c6,
-        .c7,
-        .c10,
-        .c13,
-        .contenido-certificado,
-        .contenido-footer {
-            font-family: 'Arial Narrow', Arial, sans-serif !important;
-        }
-
-        .c11 {
             padding-bottom: 8px;
         }
 
@@ -334,7 +185,7 @@
 
         .c11-firma {
             font-weight: 400;
-            font-size: 11pt;
+            font-size: 14pt;
             padding-bottom: 0px;
             margin: 0;
         }
@@ -347,6 +198,230 @@
             widows: 2;
             text-align: justify;
         }
+
+        .c3 {
+            font-weight: 700;
+            font-size: 14pt;
+        }
+
+        .c0 {
+            font-size: 14pt;
+            font-weight: 400;
+        }
+
+        /* Nuevo estilo para c0 dentro de listas */
+        li .c0 {
+            font-size: 14pt;
+        }
+
+        .c7 {
+            height: 1em;
+        }
+
+        .firma {
+            margin-bottom: 8px;
+            height: 80px;
+        }
+
+        .firma img {
+            height: 100%;
+            width: auto;
+        }
+
+
+        /* Estilos de título/subtítulo genéricos (probablemente no usados directamente aquí) */
+        .title {
+            padding-top: 24pt;
+            color: #000000;
+            font-weight: 700;
+            font-size: 14pt;
+            padding-bottom: 6pt;
+            font-family: "Archivo Narrow" !important;
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        .subtitle {
+            padding-top: 18pt;
+            color: #666666;
+            font-size: 14pt;
+            padding-bottom: 4pt;
+            font-family: "Archivo Narrow" !important;
+            line-height: 1.5;
+            page-break-after: avoid;
+            font-style: italic;
+            orphans: 2;
+            widows: 2;
+            text-align: left
+        }
+
+        li {
+            color: #000000;
+            font-size: 14pt;
+            font-family: "Archivo Narrow" !important;
+        }
+
+        p {
+            margin: 0;
+            color: #000000;
+            font-size: 14pt;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: #000000;
+            font-weight: 700;
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: left;
+        }
+
+        h1 {
+            padding-top: 24pt;
+            font-size: 14pt;
+            padding-bottom: 6pt;
+        }
+
+        h2 {
+            padding-top: 18pt;
+            font-size: 14pt;
+            padding-bottom: 4pt;
+        }
+
+        h3 {
+            padding-top: 14pt;
+            font-size: 14pt;
+            padding-bottom: 4pt;
+        }
+
+        h4 {
+            padding-top: 12pt;
+            font-size: 14pt;
+            padding-bottom: 2pt;
+        }
+
+        h5 {
+            padding-top: 11pt;
+            font-size: 14pt;
+            padding-bottom: 2pt;
+        }
+
+        h6 {
+            padding-top: 10pt;
+            font-size: 14pt;
+            padding-bottom: 2pt;
+        }
+
+        /* Estilos específicos para impresión */
+        @media print {
+            body {
+                background-color: #ffffff;
+                /* Fondo blanco para impresión */
+            }
+
+            .pagina-documento {
+                margin: 0;
+                /* Sin márgenes externos en la hoja de papel */
+                box-shadow: none !important;
+                /* Sin sombra en la impresión */
+                page-break-after: always;
+                /* Intento de salto de página */
+            }
+        }
+
+        .firma-oculta {
+            display: none !important;
+        }
+
+        .seccion-contenido-firma-dinamica {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Clases genéricas para texto y listas */
+        .c4,
+        .c7,
+        .c9,
+        .c10,
+        .c12,
+        .c14,
+        .c15,
+        .c17,
+        .c18 {
+            font-family: 'Archivo Narrow' !important;
+            font-size: 14pt;
+            line-height: 1.15;
+            margin-bottom: 0.4em;
+        }
+
+        .c7,
+        .c17,
+        .c18 {
+            font-weight: bold;
+            padding: 1px 3px;
+            margin-top: 0.6em;
+            margin-bottom: 0.5em;
+        }
+
+        .c15 {
+            font-weight: bold;
+        }
+
+        ul[class^="lst-kix_list_"] {
+            font-family: 'Archivo Narrow' !important;
+            font-size: 14pt;
+            line-height: 1.15;
+            list-style-type: none;
+            list-style-position: outside;
+            margin-left: 60px;
+            padding-left: 0px;
+            margin-bottom: 0.6em;
+        }
+
+        ul {
+            padding-left: 25px;
+        }
+
+        li {
+            list-style: none;
+        }
+
+        li[class*="li-bullet-"] {
+            margin-top: 0.1em;
+            margin-bottom: 0.15em;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        li[class*="li-bullet-"]::before {
+            content: "●";
+            font-weight: 900;
+            font-size: 14pt;
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            color: #000000;
+        }
+
+        .c-bineta-nombre {
+            font-weight: 900;
+            font-size: 14pt;
+        }
+
+        .sin-color {
+            background-color: transparent;
+        }
+
+        /* Fin nuevas clases */
     </style>
 </head>
 
@@ -358,7 +433,7 @@
             <p class="c4">
                 <span class="c0">Por medio de la presente certifico que </span>
                 <span class="c3 c1">{{name}}</span>
-                <span class="c0"> identificado con {{documentType}} No. </span>
+                <span class="c0"> {{isIdentified}} con {{documentType}} No. </span>
                 <span class="c3 c1">{{documentNumber}}</span>
                 <span class="c0"> de {{cityDocument}}</span>
                 <span class="c0">, se encuentra vinculado a través de contrato a término indefinido en esta oficina de
@@ -375,7 +450,6 @@
                 <span class="c0 c1">{{salaryInLetters}}</span>
                 <span class="c3 c1">({{salaryFormatCurrency}}).</span>
             </p>
-            <p class="c4 c7"><span class="c2 c0"></span></p>
             <p class="c4">
                 <span class="c0">Se expide la presente certificación a solicitud del interesado a los
                     {{daysCertificationText}} ({{dayCertification}}) días del mes de {{monthCertification}} de

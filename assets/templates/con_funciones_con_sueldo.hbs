@@ -4,41 +4,18 @@
 <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Fonts - Roboto Condensed (similar a Arial Narrow) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <style type="text/css">
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&display=swap');
         * {
-            font-family: 'Arial Narrow', Arial, sans-serif !important;
+            font-family: 'Archivo Narrow', sans-serif;
             line-height: 1.5;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('{{fontsBaseUrl}}/arialnarrow.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('{{fontsBaseUrl}}/arialnarrow_bold.ttf') format('truetype');
-            font-weight: bold;
-            font-style: normal;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('{{fontsBaseUrl}}/arialnarrow_italic.ttf') format('truetype');
-            font-weight: normal;
-            font-style: italic;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('{{fontsBaseUrl}}/arialnarrow_bolditalic.ttf') format('truetype');
-            font-weight: bold;
-            font-style: italic;
         }
 
         ol {
@@ -52,6 +29,7 @@
         }
 
         body {
+            font-family: 'Archivo Narrow', sans-serif;
             background-color: #f0f0f0;
             /* Un fondo para distinguir las páginas */
         }
@@ -184,9 +162,8 @@
 
         .c2 {
             color: #000000;
-            text-decoration: none;
-            vertical-align: baseline;
-            font-style: normal
+            font-size: 11pt;
+            font-family: "Archivo Narrow";
         }
 
         .c11 {
@@ -222,8 +199,19 @@
         }
 
         .c3 {
-            font-weight: 700;
-            font-size: 14pt;
+            color: #000000;
+            font-weight: 400;
+            text-decoration: none;
+            vertical-align: baseline;
+            font-size: 24pt;
+            padding-bottom: 4pt;
+            font-family: "Archivo Narrow";
+            font-style: italic;
+            line-height: 1.5;
+            page-break-after: avoid;
+            orphans: 2;
+            widows: 2;
+            text-align: center
         }
 
         .c0 {
@@ -258,7 +246,7 @@
             font-weight: 700;
             font-size: 36pt;
             padding-bottom: 6pt;
-            font-family: "Calibri";
+            font-family: "Archivo Narrow", Arial, sans-serif;
             line-height: 1.5;
             page-break-after: avoid;
             orphans: 2;
@@ -271,7 +259,7 @@
             color: #666666;
             font-size: 24pt;
             padding-bottom: 4pt;
-            font-family: "Georgia";
+            font-family: "Archivo Narrow", Arial, sans-serif;
             line-height: 1.5;
             page-break-after: avoid;
             font-style: italic;
@@ -283,7 +271,7 @@
         li {
             color: #000000;
             font-size: 11pt;
-            font-family: "Calibri"
+            font-family: "Archivo Narrow", Arial, sans-serif;
         }
 
         p {
@@ -379,7 +367,7 @@
         .c15,
         .c17,
         .c18 {
-            font-family: 'Arial Narrow', Arial, sans-serif !important;
+            font-family: 'Archivo Narrow' !important;
             font-size: 11pt;
             line-height: 1.15;
             margin-bottom: 0.4em;
@@ -399,7 +387,7 @@
         }
 
         ul[class^="lst-kix_list_"] {
-            font-family: 'Arial Narrow', Arial, sans-serif !important;
+            font-family: 'Archivo Narrow' !important;
             font-size: 11pt;
             line-height: 1.15;
             list-style-type: none;
@@ -457,7 +445,7 @@
             <p class="c4">
                 <span class="c0">Por medio de la presente certifico que </span>
                 <span class="c3 c1">{{name}}</span>
-                <span class="c0"> identificado con {{documentType}} No. </span>
+                <span class="c0"> {{isIdentified}} con {{documentType}} No. </span>
                 <span class="c3 c1">{{documentNumber}}</span>
                 <span class="c0"> de {{cityDocument}}</span>
                 <span class="c0">, se encuentra vinculado a trav&eacute;s de contrato a t&eacute;rmino indefinido en

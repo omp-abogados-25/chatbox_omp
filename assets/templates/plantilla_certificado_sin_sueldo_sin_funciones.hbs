@@ -4,41 +4,21 @@
 <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Fonts - Roboto Condensed (similar a Arial Narrow) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+        rel="stylesheet">
+
     <style type="text/css">
+    @import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&display=swap');
         * {
-            font-family: 'Arial Narrow', Arial, sans-serif !important;
+            font-family: 'Archivo Narrow', Arial, sans-serif;
             line-height: 1.5;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('{{fontsBaseUrl}}/arialnarrow.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('{{fontsBaseUrl}}/arialnarrow_bold.ttf') format('truetype');
-            font-weight: bold;
-            font-style: normal;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('{{fontsBaseUrl}}/arialnarrow_italic.ttf') format('truetype');
-            font-weight: normal;
-            font-style: italic;
-        }
-
-        @font-face {
-            font-family: 'Arial Narrow';
-            src: url('{{fontsBaseUrl}}/arialnarrow_bolditalic.ttf') format('truetype');
-            font-weight: bold;
-            font-style: italic;
         }
 
         ol {
@@ -52,6 +32,7 @@
         }
 
         body {
+            font-family: 'Archivo Narrow', Arial, sans-serif;
             background-color: #f0f0f0;
             /* Un fondo para distinguir las páginas */
         }
@@ -191,7 +172,7 @@
 
         .c11 {
             font-weight: 400;
-            font-size: 11pt;
+            font-size: 14pt;
             padding-bottom: 8px;
         }
 
@@ -207,7 +188,7 @@
 
         .c11-firma {
             font-weight: 400;
-            font-size: 11pt;
+            font-size: 14pt;
             padding-bottom: 0px;
             margin: 0;
         }
@@ -233,7 +214,7 @@
 
         /* Nuevo estilo para c0 dentro de listas */
         li .c0 {
-            font-size: 12pt;
+            font-size: 14pt;
         }
 
         .c7 {
@@ -256,9 +237,9 @@
             padding-top: 24pt;
             color: #000000;
             font-weight: 700;
-            font-size: 36pt;
+            font-size: 14pt;
             padding-bottom: 6pt;
-            font-family: "Calibri";
+            font-family: "Archivo Narrow" !important;
             line-height: 1.5;
             page-break-after: avoid;
             orphans: 2;
@@ -269,9 +250,9 @@
         .subtitle {
             padding-top: 18pt;
             color: #666666;
-            font-size: 24pt;
+            font-size: 14pt;
             padding-bottom: 4pt;
-            font-family: "Georgia";
+            font-family: "Archivo Narrow" !important;
             line-height: 1.5;
             page-break-after: avoid;
             font-style: italic;
@@ -282,14 +263,14 @@
 
         li {
             color: #000000;
-            font-size: 11pt;
-            font-family: "Calibri"
+            font-size: 14pt;
+            font-family: "Archivo Narrow" !important;
         }
 
         p {
             margin: 0;
             color: #000000;
-            font-size: 11pt;
+            font-size: 14pt;
         }
 
         h1,
@@ -309,13 +290,13 @@
 
         h1 {
             padding-top: 24pt;
-            font-size: 24pt;
+            font-size: 14pt;
             padding-bottom: 6pt;
         }
 
         h2 {
             padding-top: 18pt;
-            font-size: 18pt;
+            font-size: 14pt;
             padding-bottom: 4pt;
         }
 
@@ -327,19 +308,19 @@
 
         h4 {
             padding-top: 12pt;
-            font-size: 12pt;
+            font-size: 14pt;
             padding-bottom: 2pt;
         }
 
         h5 {
             padding-top: 11pt;
-            font-size: 11pt;
+            font-size: 14pt;
             padding-bottom: 2pt;
         }
 
         h6 {
             padding-top: 10pt;
-            font-size: 10pt;
+            font-size: 14pt;
             padding-bottom: 2pt;
         }
 
@@ -379,8 +360,8 @@
         .c15,
         .c17,
         .c18 {
-            font-family: 'Arial Narrow', Arial, sans-serif !important;
-            font-size: 11pt;
+            font-family: 'Archivo Narrow' !important;
+            font-size: 14pt;
             line-height: 1.15;
             margin-bottom: 0.4em;
         }
@@ -399,8 +380,8 @@
         }
 
         ul[class^="lst-kix_list_"] {
-            font-family: 'Arial Narrow', Arial, sans-serif !important;
-            font-size: 11pt;
+            font-family: 'Archivo Narrow' !important;
+            font-size: 14pt;
             line-height: 1.15;
             list-style-type: none;
             list-style-position: outside;
@@ -436,7 +417,7 @@
 
         .c-bineta-nombre {
             font-weight: 900;
-            font-size: 18px;
+            font-size: 14pt;
         }
 
         .sin-color {
@@ -457,7 +438,7 @@
             <p class="c4">
                 <span class="c0">Por medio de la presente certifico que </span>
                 <span class="c3 c1">{{name}}</span>
-                <span class="c0"> identificado con {{documentType}} No. </span>
+                <span class="c0"> {{isIdentified}} con {{documentType}} No. </span>
                 <span class="c3 c1">{{documentNumber}}</span>
                 <span class="c0"> de {{cityDocument}}</span>
                 <span class="c0">, se encuentra vinculado a trav&eacute;s de contrato a t&eacute;rmino indefinido en
@@ -474,7 +455,6 @@
                 <span class="c0"> desde el d&iacute;a </span>
                 <span class="c3 c1">{{startDate}}.</span>
             </p>
-            <p class="c4 c7"><span class="c2 c0"></span></p>
             <p class="c4">
                 <span class="c0">Se expide la presente certificaci&oacute;n a solicitud del interesado
                     <span class="c1">a los {{daysCertificationText}} ({{dayCertification}}) d&iacute;as del mes de
