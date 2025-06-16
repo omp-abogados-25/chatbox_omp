@@ -2,25 +2,12 @@ import { Injectable, Logger, Inject } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { IEmailService, EmailOptions } from '../../domain/interfaces/email.interface';
 import { getEmailConfig } from '../config/email.config';
-import * as fs from 'fs/promises'; 
+import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import * as path from 'path';
 import { TClient } from 'src/whatsapp-webhook/domain';
 
-// Interface para el resultado de detección de género
-interface GenderResult {
-  gender: 'male' | 'female' | 'unknown';
-  probability: number;
-  isIdentified: string; // "identificado" or "identificada"
-}
 
-// Interface para la respuesta de la API de Genderize.io
-interface GenderizeApiResponse {
-  name: string;
-  gender: 'male' | 'female' | null;
-  probability: number;
-  count: number;
-  country_id?: string;
-}
 
 import { TemplateService } from './template.service';
 import { Api2PdfService } from './api2pdf.service';
@@ -76,85 +63,58 @@ export class NodemailerEmailService implements IEmailService {
   }
 
   /**
-   * Detecta el género basado en el nombre completo usando la API de Genderize.io
-   * @param fullName - Nombre completo de la persona
-   * @returns Resultado de la detección de género
+   * Detecta el género basado en el primer nombre usando Genderize.io
    */
-  private async detectGender(fullName: string): Promise<GenderResult> {
+  private async detectGender(fullName: string): Promise<string> {
     try {
-      // Extraer el primer nombre del nombre completo
       const firstName = this.extractFirstName(fullName);
-      
-      if (!firstName) {
-        this.logger.warn(`No se pudo extraer primer nombre de: ${fullName}`);
-        return this.getDefaultGenderResult();
-      }
-
       this.logger.log(`Detectando género para el nombre: ${firstName}`);
-      
-      // Llamar a la API de Genderize.io con localización para Colombia
-      const apiUrl = `https://api.genderize.io?name=${encodeURIComponent(firstName)}&country_id=CO`;
-      
-      const response = await fetch(apiUrl);
+
+      const response = await fetch(`https://api.genderize.io?name=${firstName}&country_id=CO`);
       
       if (!response.ok) {
-        this.logger.error(`Error en la API de Genderize.io: ${response.status} ${response.statusText}`);
+        this.logger.warn(`Error en la API de Genderize: ${response.status}`);
         return this.getDefaultGenderResult();
       }
 
-      const result: GenderizeApiResponse = await response.json();
-      
-      this.logger.log(`Resultado de detección de género: ${JSON.stringify(result)}`);
+      const data = await response.json();
+      this.logger.log(`Respuesta de Genderize:`, data);
 
-      if (result.gender === 'male') {
-        return {
-          gender: 'male',
-          probability: result.probability,
-          isIdentified: 'identificado'
-        };
-      } else if (result.gender === 'female') {
-        return {
-          gender: 'female',
-          probability: result.probability,
-          isIdentified: 'identificada'
-        };
+      if (data.gender === 'male') {
+        return 'identificado';
+      } else if (data.gender === 'female') {
+        return 'identificada';
       } else {
-        // Si no se puede determinar, usar masculino como default (convención del español)
-        this.logger.warn(`No se pudo determinar género para: ${firstName}. Usando masculino por defecto.`);
+        this.logger.log(`Género no determinado para ${firstName}, usando valor por defecto`);
         return this.getDefaultGenderResult();
       }
-
     } catch (error) {
-      this.logger.error(`Error detectando género para ${fullName}:`, error);
+      this.logger.error(`Error detectando género: ${error.message}`);
       return this.getDefaultGenderResult();
     }
   }
 
   /**
    * Extrae el primer nombre de un nombre completo
-   * @param fullName - Nombre completo
-   * @returns Primer nombre
    */
   private extractFirstName(fullName: string): string {
-    if (!fullName) return '';
+    if (!fullName || typeof fullName !== 'string') {
+      this.logger.warn('Nombre completo no válido, usando valor por defecto');
+      return 'Persona';
+    }
+
+    // Dividir por espacios y tomar la primera palabra
+    const firstName = fullName.trim().split(' ')[0];
+    this.logger.log(`Primer nombre extraído: ${firstName} de nombre completo: ${fullName}`);
     
-    // Limpiar el nombre y dividir por espacios
-    const nameParts = fullName.trim().split(/\s+/);
-    
-    // Retornar el primer elemento (primer nombre)
-    return nameParts[0] || '';
+    return firstName;
   }
 
   /**
-   * Retorna el resultado por defecto cuando no se puede determinar el género
-   * @returns Resultado por defecto (masculino)
+   * Retorna el resultado por defecto para género
    */
-  private getDefaultGenderResult(): GenderResult {
-    return {
-      gender: 'unknown',
-      probability: 0,
-      isIdentified: 'identificado' // Usar masculino como default en español
-    };
+  private getDefaultGenderResult(): string {
+    return 'identificado'; // Masculino por defecto
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
@@ -324,21 +284,20 @@ export class NodemailerEmailService implements IEmailService {
       } = this.getFormattedCertificateDates();
       
       // Detectar género basado en el nombre del cliente
-      const genderResult: GenderResult = await this.detectGender(clientData.name);
-      this.logger.log(`[NodemailerEmailService] Género detectado: ${genderResult.gender}, Probabilidad: ${genderResult.probability}, Identificado/a: ${genderResult.isIdentified}`);
+      const isIdentified: string = await this.detectGender(clientData.name);
+      this.logger.log(`[NodemailerEmailService] Género detectado: ${isIdentified}`);
       
       // Determinar qué firmante usar basado en el documento del cliente
       const signerData = this.getSignerData(clientData.documentNumber);
       
       const currentTime = new Date().toLocaleTimeString('es-CO');
       const projectRootDir = path.resolve(__dirname, '../../../../');
-      const fontsBaseFileUrl = `file:///${path.resolve(projectRootDir, 'assets/fonts').replace(/\\/g, '/')}`;
+      
       const headerImageFileUrl = `file:///${path.resolve(projectRootDir, HEADER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
       const footerImageFileUrl = `file:///${path.resolve(projectRootDir, FOOTER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
       const firmaImageFileUrl = `file:///${path.resolve(projectRootDir, signerData.imagePath).replace(/\\/g, '/')}`;
       const logoOmpForEmailPath = path.resolve(projectRootDir, LOGO_OMP_PATH_RELATIVE);
 
-      this.logger.debug(`Fonts Base URL: ${fontsBaseFileUrl}`);
       this.logger.debug(`Header Image URL: ${headerImageFileUrl}`);
       this.logger.debug(`Footer Image URL: ${footerImageFileUrl}`);
       this.logger.debug(`Firma Image URL: ${firmaImageFileUrl}`);
@@ -377,7 +336,6 @@ export class NodemailerEmailService implements IEmailService {
               transportationAllowanceInLetters: (clientData as any).transportationAllowanceInLetters,
               transportationAllowanceFormatCurrency: (clientData as any).transportationAllowanceFormatCurrency
           } : {}),
-          fontsBaseUrl: fontsBaseFileUrl,
           headerImageFileUrl: headerImageFileUrl,
           footerImageFileUrl: footerImageFileUrl,
           firmaImageFileUrl: firmaImageFileUrl,
@@ -385,8 +343,7 @@ export class NodemailerEmailService implements IEmailService {
           positionFirmante: signerData.cargo,
           functionCategories: functionCategories,
           // Información de género
-          isIdentified: genderResult.isIdentified,
-          genderProbability: genderResult.probability,
+          isIdentified: isIdentified,
         };
 
         finalHtmlForPdf = await this.templateService.compileCertificateTemplate(
@@ -418,15 +375,13 @@ export class NodemailerEmailService implements IEmailService {
               transportationAllowanceInLetters: (clientData as any).transportationAllowanceInLetters,
               transportationAllowanceFormatCurrency: (clientData as any).transportationAllowanceFormatCurrency
           } : {}),
-          fontsBaseUrl: fontsBaseFileUrl,
           headerImageFileUrl: headerImageFileUrl,
           footerImageFileUrl: footerImageFileUrl,
           firmaImageFileUrl: firmaImageFileUrl,
           nameFirmante: signerData.nombre,
           positionFirmante: signerData.cargo,
           // Información de género
-          isIdentified: genderResult.isIdentified,
-          genderProbability: genderResult.probability,
+          isIdentified: isIdentified,
         };
         
         finalHtmlForPdf = await this.templateService.compileCertificateTemplate(
