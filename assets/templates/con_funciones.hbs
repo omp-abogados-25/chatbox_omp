@@ -7,6 +7,7 @@
     <style type="text/css">
         * {
             font-family: 'Arial Narrow', Arial, sans-serif !important;
+            src: url('{{fontsBaseUrl}}/arialnarrow.ttf') format('truetype');
             line-height: 1.5;
             margin: 0;
             padding: 0;
@@ -223,17 +224,17 @@
 
         .c3 {
             font-weight: 700;
-            font-size: 14pt;
+            font-size: 11pt;
         }
 
         .c0 {
-            font-size: 14pt;
+            font-size: 11pt;
             font-weight: 400;
         }
 
         /* Nuevo estilo para c0 dentro de listas */
         li .c0 {
-            font-size: 12pt;
+            font-size: 11pt;
         }
 
         .c7 {
@@ -256,9 +257,10 @@
             padding-top: 24pt;
             color: #000000;
             font-weight: 700;
-            font-size: 36pt;
+            font-size: 11pt;
             padding-bottom: 6pt;
-            font-family: "Calibri";
+            src: url('{{fontsBaseUrl}}/arialnarrow_bold.ttf') format('truetype');
+            font-family: 'Arial Narrow', Arial, sans-serif !important;
             line-height: 1.5;
             page-break-after: avoid;
             orphans: 2;
@@ -269,9 +271,10 @@
         .subtitle {
             padding-top: 18pt;
             color: #666666;
-            font-size: 24pt;
+            font-size: 11pt;
             padding-bottom: 4pt;
-            font-family: "Georgia";
+            font-family: 'Arial Narrow', Arial, sans-serif !important;
+            src: url('{{fontsBaseUrl}}/arialnarrow.ttf') format('truetype');
             line-height: 1.5;
             page-break-after: avoid;
             font-style: italic;
@@ -283,7 +286,8 @@
         li {
             color: #000000;
             font-size: 11pt;
-            font-family: "Calibri"
+            font-family: 'Arial Narrow', Arial, sans-serif !important;
+            src: url('{{fontsBaseUrl}}/arialnarrow.ttf') format('truetype');
         }
 
         p {
@@ -309,25 +313,25 @@
 
         h1 {
             padding-top: 24pt;
-            font-size: 24pt;
+            font-size: 11pt;
             padding-bottom: 6pt;
         }
 
         h2 {
             padding-top: 18pt;
-            font-size: 18pt;
+            font-size: 11pt;
             padding-bottom: 4pt;
         }
 
         h3 {
             padding-top: 14pt;
-            font-size: 14pt;
+            font-size: 11pt;
             padding-bottom: 4pt;
         }
 
         h4 {
             padding-top: 12pt;
-            font-size: 12pt;
+            font-size: 11pt;
             padding-bottom: 2pt;
         }
 
@@ -339,7 +343,7 @@
 
         h6 {
             padding-top: 10pt;
-            font-size: 10pt;
+            font-size: 11pt;
             padding-bottom: 2pt;
         }
 
@@ -380,6 +384,7 @@
         .c17,
         .c18 {
             font-family: 'Arial Narrow', Arial, sans-serif !important;
+            src: url('{{fontsBaseUrl}}/arialnarrow.ttf') format('truetype');
             font-size: 11pt;
             line-height: 1.15;
             margin-bottom: 0.4em;
@@ -400,6 +405,7 @@
 
         ul[class^="lst-kix_list_"] {
             font-family: 'Arial Narrow', Arial, sans-serif !important;
+            src: url('{{fontsBaseUrl}}/arialnarrow.ttf') format('truetype');
             font-size: 11pt;
             line-height: 1.15;
             list-style-type: none;
@@ -427,7 +433,7 @@
         li[class*="li-bullet-"]::before {
             content: "●";
             font-weight: 900;
-            font-size: 14pt;
+            font-size: 11pt;
             position: absolute;
             left: 0px;
             top: 0px;
@@ -436,14 +442,16 @@
 
         .c-bineta-nombre {
             font-weight: 900;
-            font-size: 18px;
+            font-size: 11pt;
         }
 
         .sin-color {
             background-color: transparent;
         }
 
-        /* Fin nuevas clases */
+        .font-size-11 {
+            font-size: 11pt;
+        }
     </style>
 </head>
 
@@ -489,22 +497,6 @@
             {{else}}
             <p><span class="c0">No se especificaron funciones para este cargo.</span></p>
             {{/if}}
-            <p class="c6"><span class="c0"></span></p>
-            <p class="c14"><span class="c4">Adicionalmente, se certifica que dentro de su ejercicio profesional
-                    en</span><span class="c1">&nbsp;OMP ABOGADOS</span><span class="c0">&nbsp;ha manejado y
-                    gestionado:
-                </span></p>
-            <ul class="c2 lst-kix_list_8-0 start">
-                <li class="c9 li-bullet-0"><span class="c0">Procesos de </span><span class="c1 c8">responsabilidad
-                        fiscal</span><span class="c0">&nbsp;y </span><span class="c8 c1">procesos administrativos
-                        sancionatorios</span><span class="c0">&nbsp;ante entes de control, garantizando el
-                        cumplimiento
-                        de los
-                        lineamientos jur&iacute;dicos aplicables y participando en la representaci&oacute;n y
-                        defensa de
-                        los
-                        intereses de los clientes en estas actuaciones.</span></li>
-            </ul>
 
             <p class="c4 c7"><span class="c2 c0"></span></p>
             <p class="c4">
@@ -581,7 +573,7 @@
             }
 
             const allPages = document.querySelectorAll('.pagina-documento');
-            const LINE_LIMIT_FOR_OVERFLOW_CONFIG = 45; // Aumentado de 38 a 41
+            const LINE_LIMIT_FOR_OVERFLOW_CONFIG = 42; // Aumentado de 38 a 41
             const TEXT_AVERAGE_LINE_HEIGHT_PX = 19;
             const PAGE_MAX_CONTENT_HEIGHT_PX = LINE_LIMIT_FOR_OVERFLOW_CONFIG * TEXT_AVERAGE_LINE_HEIGHT_PX; // Ahora será 41 * 19 = 779px
             const UL_BASE_HEIGHT_COST_PX = 5;
