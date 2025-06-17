@@ -75,6 +75,15 @@ export class NodemailerEmailService implements IEmailService {
     return result;
   }
 
+  private getLinkedGender(gender: string): string {
+    // Normalizar el valor del gender (eliminar espacios, convertir a mayúscula)
+    const normalizedGender = String(gender || 'M').trim().toUpperCase();
+    
+    // F = Femenino, M = Masculino
+    const result = normalizedGender === 'F' ? 'vinculada' : 'vinculado';
+    return result;
+  }
+
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
       const config = getEmailConfig();
@@ -238,6 +247,7 @@ export class NodemailerEmailService implements IEmailService {
       
       // Obtener identificación de género desde los datos del cliente
       const isIdentified: string = this.getGenderIdentification(clientData.gender || 'M');
+      const isLinked: string = this.getLinkedGender(clientData.gender || 'M');
       
       // Determinar qué firmante usar basado en el documento del cliente
       const signerData = this.getSignerData(clientData.documentNumber);
@@ -249,12 +259,18 @@ export class NodemailerEmailService implements IEmailService {
       const footerImageFileUrl = `file:///${path.resolve(projectRootDir, FOOTER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
       const firmaImageFileUrl = `file:///${path.resolve(projectRootDir, signerData.imagePath).replace(/\\/g, '/')}`;
       const logoOmpForEmailPath = path.resolve(projectRootDir, LOGO_OMP_PATH_RELATIVE);
+      clientData.cityDocument = clientData.cityDocument ? clientData.cityDocument.trim() : '';
+      if (clientData.cityDocument.length > 0 && clientData.cityDocument.endsWith(' ')) {
+        clientData.cityDocument = clientData.cityDocument.slice(0, -1);
+      }
+      clientData.cityDocument += ', ';
 
       const formattedClientData = {
         ...clientData,
         name: clientData.name ? clientData.name.toUpperCase() : '',
         documentNumber: this.formatDocumentNumber(clientData.documentNumber),
         startDate: this.formatDateToText(clientData.startDate),
+        cityDocument: clientData.cityDocument
       };
 
       let finalHtmlForPdf = '';
@@ -276,7 +292,7 @@ export class NodemailerEmailService implements IEmailService {
           yearCertificationText: anioCertificacionTexto,
           yearCertification: anioCertificacion,
           startDate: formattedClientData.startDate,
-          cityDocument: clientData.cityDocument,
+          cityDocument: formattedClientData.cityDocument,
           ...(isConSueldoType ? { 
               salaryInLetters: (clientData as any).salaryInLetters, 
               salaryFormatCurrency: (clientData as any).salaryFormatCurrency,
@@ -291,6 +307,7 @@ export class NodemailerEmailService implements IEmailService {
           functionCategories: functionCategories,
           // Información de género
           isIdentified: isIdentified,
+          isLinked: isLinked,
         };
 
 
@@ -314,7 +331,7 @@ export class NodemailerEmailService implements IEmailService {
           yearCertificationText: anioCertificacionTexto,
           yearCertification: anioCertificacion,
           startDate: formattedClientData.startDate,
-          cityDocument: clientData.cityDocument,
+          cityDocument: formattedClientData.cityDocument,
           ...(isConSueldoType ? { 
               salaryInLetters: (clientData as any).salaryInLetters, 
               salaryFormatCurrency: (clientData as any).salaryFormatCurrency,
@@ -328,6 +345,7 @@ export class NodemailerEmailService implements IEmailService {
           positionFirmante: signerData.cargo,
           // Información de género
           isIdentified: isIdentified,
+          isLinked: isLinked,
         };
         
         
