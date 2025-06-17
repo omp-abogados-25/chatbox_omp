@@ -75,6 +75,15 @@ export class NodemailerEmailService implements IEmailService {
     return result;
   }
 
+  private getLinkedGender(gender: string): string {
+    // Normalizar el valor del gender (eliminar espacios, convertir a mayúscula)
+    const normalizedGender = String(gender || 'M').trim().toUpperCase();
+    
+    // F = Femenino, M = Masculino
+    const result = normalizedGender === 'F' ? 'vinculada' : 'vinculado';
+    return result;
+  }
+
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
       const config = getEmailConfig();
@@ -238,6 +247,7 @@ export class NodemailerEmailService implements IEmailService {
       
       // Obtener identificación de género desde los datos del cliente
       const isIdentified: string = this.getGenderIdentification(clientData.gender || 'M');
+      const isLinked: string = this.getLinkedGender(clientData.gender || 'M');
       
       // Determinar qué firmante usar basado en el documento del cliente
       const signerData = this.getSignerData(clientData.documentNumber);
@@ -291,6 +301,7 @@ export class NodemailerEmailService implements IEmailService {
           functionCategories: functionCategories,
           // Información de género
           isIdentified: isIdentified,
+          isLinked: isLinked,
         };
 
 
@@ -328,6 +339,7 @@ export class NodemailerEmailService implements IEmailService {
           positionFirmante: signerData.cargo,
           // Información de género
           isIdentified: isIdentified,
+          isLinked: isLinked,
         };
         
         
