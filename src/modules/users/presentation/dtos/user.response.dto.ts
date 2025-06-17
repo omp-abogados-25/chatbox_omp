@@ -25,6 +25,12 @@ export class UserResponseDto {
   @ApiProperty({ description: 'Auxilio de Transporte del usuario.', example: '140000' })
   transportation_allowance: string;
 
+  @ApiProperty({ 
+    description: 'Género del usuario. M = Masculino, F = Femenino', 
+    example: 'M'
+  })
+  gender: string;
+
   @ApiPropertyOptional({
     description: 'ID del Cargo asignado al usuario (UUID).',
     example: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',

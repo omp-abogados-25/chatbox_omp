@@ -58,63 +58,21 @@ export class NodemailerEmailService implements IEmailService {
       secure: config.secure,
       auth: config.auth,
     });
-
-    this.logger.log(`Email service initialized with host: ${config.host}`);
   }
 
   /**
-   * Detecta el género basado en el primer nombre usando Genderize.io
+   * Obtiene la forma correcta de "identificado/a" basado en el género del usuario
    */
-  private async detectGender(fullName: string): Promise<string> {
-    try {
-      const firstName = this.extractFirstName(fullName);
-      this.logger.log(`Detectando género para el nombre: ${firstName}`);
-
-      const response = await fetch(`https://api.genderize.io?name=${firstName}&country_id=CO`);
-      
-      if (!response.ok) {
-        this.logger.warn(`Error en la API de Genderize: ${response.status}`);
-        return this.getDefaultGenderResult();
-      }
-
-      const data = await response.json();
-      this.logger.log(`Respuesta de Genderize:`, data);
-
-      if (data.gender === 'male') {
-        return 'identificado';
-      } else if (data.gender === 'female') {
-        return 'identificada';
-      } else {
-        this.logger.log(`Género no determinado para ${firstName}, usando valor por defecto`);
-        return this.getDefaultGenderResult();
-      }
-    } catch (error) {
-      this.logger.error(`Error detectando género: ${error.message}`);
-      return this.getDefaultGenderResult();
-    }
-  }
-
-  /**
-   * Extrae el primer nombre de un nombre completo
-   */
-  private extractFirstName(fullName: string): string {
-    if (!fullName || typeof fullName !== 'string') {
-      this.logger.warn('Nombre completo no válido, usando valor por defecto');
-      return 'Persona';
-    }
-
-    // Dividir por espacios y tomar la primera palabra
-    const firstName = fullName.trim().split(' ')[0];
-    this.logger.log(`Primer nombre extraído: ${firstName} de nombre completo: ${fullName}`);
+  private getGenderIdentification(gender: string): string {
     
-    return firstName;
-  }
-
-  /**
-   * Retorna el resultado por defecto para género
-   */
-  private getDefaultGenderResult(): string {
-    return 'identificado'; // Masculino por defecto
+    // Normalizar el valor del gender (eliminar espacios, convertir a mayúscula)
+    const normalizedGender = String(gender || 'M').trim().toUpperCase();
+    
+    // F = Femenino, M = Masculino
+    const result = normalizedGender === 'F' ? 'identificada' : 'identificado';
+    
+    
+    return result;
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
@@ -132,7 +90,6 @@ export class NodemailerEmailService implements IEmailService {
 
       const result = await this.transporter.sendMail(mailOptions);
       
-      this.logger.log(`Email sent successfully to ${options.to}. MessageId: ${result.messageId}`);
       return true;
     } catch (error) {
       this.logger.error(`Failed to send email to ${options.to}. Message: ${error.message}`, error.stack);
@@ -254,7 +211,6 @@ export class NodemailerEmailService implements IEmailService {
     }
     
     // Para todos los demás casos, usar firmante por defecto
-    this.logger.log(`Certificado para empleado regular (${clientDocumentNumber}). Usando firmante por defecto: ${FIRMANTE_NOMBRE_DEFAULT}`);
     return {
       nombre: FIRMANTE_NOMBRE_DEFAULT,
       cargo: FIRMANTE_CARGO_DEFAULT,
@@ -270,9 +226,6 @@ export class NodemailerEmailService implements IEmailService {
     functionCategories?: Array<{ categoryName: string; functions: string[] }>,
   ): Promise<boolean> {
     let tempPdfFilePath: string | null = null;
-    this.logger.log(`[NodemailerEmailService] Iniciando sendCertificateEmail. Tipo: ${certificateType}`);
-    this.logger.log(`[NodemailerEmailService] Categorías de funciones recibidas: ${JSON.stringify(functionCategories, null, 2)}`);
-
     try {
       const {
         diasCertificacionTexto,
@@ -283,9 +236,8 @@ export class NodemailerEmailService implements IEmailService {
         currentDateFormatted
       } = this.getFormattedCertificateDates();
       
-      // Detectar género basado en el nombre del cliente
-      const isIdentified: string = await this.detectGender(clientData.name);
-      this.logger.log(`[NodemailerEmailService] Género detectado: ${isIdentified}`);
+      // Obtener identificación de género desde los datos del cliente
+      const isIdentified: string = this.getGenderIdentification(clientData.gender || 'M');
       
       // Determinar qué firmante usar basado en el documento del cliente
       const signerData = this.getSignerData(clientData.documentNumber);
@@ -297,10 +249,6 @@ export class NodemailerEmailService implements IEmailService {
       const footerImageFileUrl = `file:///${path.resolve(projectRootDir, FOOTER_IMAGE_PATH_RELATIVE).replace(/\\/g, '/')}`;
       const firmaImageFileUrl = `file:///${path.resolve(projectRootDir, signerData.imagePath).replace(/\\/g, '/')}`;
       const logoOmpForEmailPath = path.resolve(projectRootDir, LOGO_OMP_PATH_RELATIVE);
-
-      this.logger.debug(`Header Image URL: ${headerImageFileUrl}`);
-      this.logger.debug(`Footer Image URL: ${footerImageFileUrl}`);
-      this.logger.debug(`Firma Image URL: ${firmaImageFileUrl}`);
 
       const formattedClientData = {
         ...clientData,
@@ -319,7 +267,6 @@ export class NodemailerEmailService implements IEmailService {
         if (isConSueldoType) {
           plantillaSeleccionada = CERT_CON_FUNCIONES_CON_SUELDO_TEMPLATE; 
         }
-        this.logger.log(`Processing '${certificateType}' con funciones. Plantilla: ${plantillaSeleccionada}`);
 
         const templateDataForConFunciones = {
           ...formattedClientData,
@@ -346,19 +293,18 @@ export class NodemailerEmailService implements IEmailService {
           isIdentified: isIdentified,
         };
 
+
         finalHtmlForPdf = await this.templateService.compileCertificateTemplate(
           plantillaSeleccionada,
           templateDataForConFunciones,
           'assets/templates'
         );
-        this.logger.log('HTML para certificado "con funciones" compilado.');
 
       } else { 
         let plantillaSeleccionada = CERT_SIN_SUELDO_TEMPLATE; 
         if (isConSueldoType) {
           plantillaSeleccionada = CERT_CON_SUELDO_TEMPLATE; 
         }
-        this.logger.log(`Processing '${certificateType}' sin funciones. Plantilla: ${plantillaSeleccionada}`);
         
         const templateDataSinFunciones = {
           ...formattedClientData,
@@ -384,24 +330,21 @@ export class NodemailerEmailService implements IEmailService {
           isIdentified: isIdentified,
         };
         
+        
         finalHtmlForPdf = await this.templateService.compileCertificateTemplate(
           plantillaSeleccionada,
           templateDataSinFunciones,
           'assets/templates'
         );
-        this.logger.log('HTML para certificado "sin funciones" compilado directamente desde plantilla completa.');
       }
 
       if (!finalHtmlForPdf) {
         this.logger.error('HTML for certificate compilation is empty.');
         return false;
       }
-
-      this.logger.log('Generating certificate PDF file with Api2PdfService...');
       tempPdfFilePath = await this.pdfService.generatePdfFromHtml(
         finalHtmlForPdf
       );
-      this.logger.log(`Certificate PDF generated successfully at: ${tempPdfFilePath}`);
       
       const transcriptionTxt = this.generateTranscriptionFile(chatTranscription, currentDateFormatted, currentTime);
       
@@ -448,7 +391,6 @@ export class NodemailerEmailService implements IEmailService {
       if (tempPdfFilePath) {
         try {
           await fs.unlink(tempPdfFilePath);
-          this.logger.log(`Temporary PDF file ${tempPdfFilePath} deleted successfully.`);
         } catch (e) {
           this.logger.error(`Failed to delete temporary PDF file ${tempPdfFilePath}:`, e);
         }

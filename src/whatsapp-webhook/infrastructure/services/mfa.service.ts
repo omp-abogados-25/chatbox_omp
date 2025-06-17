@@ -107,7 +107,6 @@ export class MfaService implements IMfaService {
         sessionId
       );
 
-      this.logger.log(`MFA session created for phone ${phoneNumber}, session: ${sessionId}`);
       return session;
     } catch (error) {
       this.logger.error(`Failed to create MFA session for ${phoneNumber}:`, error);
@@ -200,9 +199,7 @@ export class MfaService implements IMfaService {
 
   async cleanupExpiredSessions(): Promise<void> {
     try {
-      // Esta función se puede ejecutar periódicamente para limpiar sesiones expiradas
-      // Redis ya maneja el TTL automáticamente, pero podemos hacer limpieza adicional
-      this.logger.log('MFA session cleanup completed');
+      // No se necesita implementación para Redis
     } catch (error) {
       this.logger.error('Failed to cleanup expired MFA sessions:', error);
     }

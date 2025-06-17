@@ -10,6 +10,7 @@ import { WhatsappWebhookServicesModule as InfraServicesModule } from '../../infr
 import { UsersApplicationModule } from '../../../modules/users/application/users-application.module';
 import { PositionFunctionModule } from '../../../modules/position-functions';
 import { PositionsApplicationModule } from '../../../modules/positions/application/positions-application.module';
+import { PrismaModule } from '../../../integrations/prisma';
 
 const services = [
   EchoMessageService,

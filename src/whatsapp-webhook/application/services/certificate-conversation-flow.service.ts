@@ -9,6 +9,7 @@ import { Position as DomainPosition } from '../../../modules/positions/domain/en
 import { FunctionDetailItem } from '../../../modules/position-functions/domain/repositories';
 import { SessionWithAllData } from '../../domain/types/session-data.types';
 import { toWordsConverter } from '../config/to-words.config';
+import { ClientService } from './client.service';
 
 /**
  * @class CertificateConversationFlowService
@@ -28,6 +29,7 @@ export class CertificateConversationFlowService {
     private readonly transcriptionService: ChatTranscriptionService,
     private readonly findFunctionDetailsByPositionIdUseCase: FindFunctionDetailsByPositionIdUseCase,
     private readonly findPositionByIdUseCase: FindPositionByIdUseCase,
+    private readonly clientService: ClientService,
   ) {}
 
   /**
@@ -54,7 +56,6 @@ export class CertificateConversationFlowService {
       this.transcriptionService.addMessage(from, 'system', message);
     } catch (error) {
       // Manejo de errores: registra en logs y transcripción
-      this.logger.error(`Error sending message to ${from}:`, error instanceof Error ? error.message : String(error));
       this.transcriptionService.addMessage(from, 'system', `[ERROR] Failed to send: ${message.substring(0, 50)}...`);
     }
   }
@@ -86,9 +87,7 @@ export class CertificateConversationFlowService {
       // Intenta enviar el menú interactivo usando el servicio de mensajes
       await this.messageService.sendInteractiveMessage(menuMessage);
       this.transcriptionService.addMessage(from, 'system', `[Menú Interactivo] ${menuDescription}`);
-      this.logger.log(`Interactive menu sent successfully to ${from}: ${menuDescription}`);
     } catch (error) {
-      this.logger.error(`Error sending interactive menu to ${from}:`, error instanceof Error ? error.message : String(error));
       // Re-lanza el error para que el método llamador pueda manejarlo
       throw error;
     }
@@ -122,7 +121,6 @@ export class CertificateConversationFlowService {
     
     // Valida si la conversión fue exitosa
     if (isNaN(salaryNumber)) {
-        this.logger.warn(`Valor de salario no numérico recibido: '${salaryString}', limpiado a: '${cleanedSalaryString}'.`);
         return { salaryInLetters: 'VALOR INVÁLIDO', salaryFormatCurrency: 'VALOR INVÁLIDO' };
     }
 
@@ -146,7 +144,6 @@ export class CertificateConversationFlowService {
       }
     } catch (error) {
       // Registra cualquier error durante la conversión
-      this.logger.error(`Error al convertir salario a palabras:`, error instanceof Error ? error.message : String(error), error instanceof Error ? error.stack : undefined);
     }
 
     return { salaryInLetters, salaryFormatCurrency };
@@ -217,7 +214,6 @@ export class CertificateConversationFlowService {
     try {
       await this.sendInteractiveMenuAndLog(from, menuMessage, 'certificado');
     } catch (error) {
-      this.logger.error(`Failed to send interactive menu to ${from}, falling back to text message:`, error instanceof Error ? error.message : String(error));
       
       // Fallback a mensaje de texto simple
       const fallbackMessage = `📄 **Certificados Laborales**
@@ -236,7 +232,6 @@ export class CertificateConversationFlowService {
 
     // Actualiza el estado de la sesión del usuario
     this.sessionManager.updateSessionState(from, SessionState.WAITING_CERTIFICATE_TYPE);
-    this.logger.log(`Session state for ${from} updated to WAITING_CERTIFICATE_TYPE.`);
   }
 
   /**
@@ -261,7 +256,6 @@ export class CertificateConversationFlowService {
     // Obtiene la sesión del usuario y valida que exista
     const session = this.sessionManager.getSession(from) as SessionWithAllData | null;
     if (!session) {
-      this.logger.warn(`No session found for ${from} in handleMenuSelection. Cannot proceed.`);
       await this.sendMessageAndLog(from, 'Tu sesión no fue encontrada. Por favor, intenta iniciar de nuevo.', messageId, phoneNumberId);
       return;
     }
@@ -302,7 +296,6 @@ export class CertificateConversationFlowService {
         return;
       }
 
-      this.logger.log(`User ${from} selected certificate type: ${finalCertificateTypeDisplay}. Input was: "${body}"`);
       
       await this.processCertificateRequest(
         from, 
@@ -317,10 +310,8 @@ export class CertificateConversationFlowService {
     // Maneja la selección de acción final (después de generar certificado)
     else if (session.state === SessionState.WAITING_FINAL_ACTION) {
       if (input === 'generate_another' || input === 'otro' || input === 'certificado') {
-        this.logger.log(`User ${from} requested another certificate. Showing certificate menu.`);
         await this.showCertificateMenu(from, messageId, phoneNumberId);
       } else if (input === 'finish_session' || input === 'finalizar') {
-        this.logger.log(`User ${from} requested session termination from final menu.`);
         this.sessionManager.clearSession(from);
         await this.sendMessageAndLog(from, 'Sesión finalizada. ¡Gracias por usar nuestros servicios! 👋', messageId, phoneNumberId);
       } else {
@@ -331,33 +322,24 @@ export class CertificateConversationFlowService {
       }
     } 
     else {
-      this.logger.warn(`handleMenuSelection llamado en estado inesperado: ${session.state} para ${from}. Input: "${body}".`);
       await this.sendMessageAndLog(from, "No entendí tu respuesta. Por favor, selecciona una opción de un menú o escribe \"finalizar\".", messageId, phoneNumberId);
     }
   }
 
   /**
-   * Procesa la solicitud de generación y envío de un certificado laboral.
+   * Procesa la solicitud de certificado del usuario, verificando la información de la sesión
+   * y orquestando la generación y envío del documento solicitado.
    * 
-   * @description Este método maneja todo el proceso de generación y envío de certificados laborales,
-   * incluyendo la recopilación de datos del empleado, formateo de información salarial, obtención de
-   * funciones del cargo (si aplica) y envío por correo electrónico.
+   * IMPORTANTE: Este método ahora recarga los datos del usuario desde la base de datos
+   * para asegurar que la información esté actualizada, especialmente útil cuando un usuario
+   * solicita múltiples certificados en la misma sesión.
    * 
-   * Flujo principal:
-   * 1. Valida que la sesión tenga toda la información necesaria del usuario
-   * 2. Envía mensaje de "cargando" al usuario
-   * 3. Obtiene el nombre del cargo desde la base de datos
-   * 4. Formatea los datos salariales a texto
-   * 5. Si el certificado es "con funciones", obtiene y agrupa las funciones del cargo
-   * 6. Genera y envía el certificado por email
-   * 7. Notifica al usuario el resultado
-   * 
-   * @param from - Número de WhatsApp del solicitante
-   * @param certificateDisplayInfo - Descripción legible del tipo de certificado (ej: "Con Sueldo y Con Funciones") 
-   * @param finalCertificateTypeKey - Clave técnica del tipo de certificado (ej: "con_sueldo_con_funciones")
-   * @param messageId - ID del mensaje de WhatsApp
-   * @param phoneNumberId - ID del número de WhatsApp del bot
-   * @param onGenericAuthenticatedStateCallback - Callback para manejar el estado autenticado
+   * @param from - Número de teléfono del usuario en formato internacional
+   * @param certificateDisplayInfo - Descripción legible del tipo de certificado solicitado 
+   * @param finalCertificateTypeKey - Clave técnica que identifica el tipo de certificado
+   * @param messageId - ID único del mensaje de WhatsApp que disparó esta solicitud
+   * @param phoneNumberId - ID del número de teléfono de WhatsApp Business
+   * @param onGenericAuthenticatedStateCallback - Función callback para manejar errores o estados de autenticación
    */
   public async processCertificateRequest(
     from: string, 
@@ -369,20 +351,28 @@ export class CertificateConversationFlowService {
   ): Promise<void> {
     const session = this.sessionManager.getSession(from) as SessionWithAllData | null;
     if (!session || !session.userId || !session.clientName || !session.documentNumber || !session.documentType || !session.email) {
-      this.logger.error(`Información de cliente incompleta en sesión para ${from}: ${JSON.stringify(session)}`);
       await this.sendMessageAndLog(from, 'Falta información crítica para generar el certificado. Por favor, reinicia el proceso.', messageId, phoneNumberId);
       this.sessionManager.updateSessionState(from, SessionState.AUTHENTICATED); 
       await onGenericAuthenticatedStateCallback();
       return;
     }
-
-    this.logger.log(`Iniciando processCertificateRequest para ${from}. Tipo: ${finalCertificateTypeKey}`);
     const loadingMessage = `⏳ Procesando tu solicitud de certificado laboral solicitado
 
 Por favor espera un momento.`;
     await this.sendMessageAndLog(from, loadingMessage, messageId, phoneNumberId);
 
     try {
+      // 🔄 RECARGAR DATOS FRESCOS DESDE LA BASE DE DATOS
+      // Esto asegura que siempre tengamos la información más actualizada del usuario
+      const freshUserData = await this.clientService.findByDocumentFromDatabase(session.documentNumber);
+      
+      if (freshUserData) {
+        // Actualizar la sesión con los datos más recientes
+        session.clientName = freshUserData.name;
+        session.email = freshUserData.email || session.email;
+        session.gender = freshUserData.gender || 'M';
+      }
+
       let positionName = 'CARGO NO ESPECIFICADO';
       if (session.positionId) {
         try {
@@ -410,9 +400,11 @@ Por favor espera un momento.`;
         transportationAllowance: session.transportationAllowance,
         transportationAllowanceInLetters: transportationDetails.salaryInLetters, 
         transportationAllowanceFormatCurrency: transportationDetails.salaryFormatCurrency,
+        gender: session.gender || 'M',
         email: session.email,
         phone: from,
       };
+
 
       // Si el certificado es con funciones, obtiene y agrupa las funciones del cargo
       let functionsForTemplate: Array<{ categoryName: string; functions: string[] }> | null = null;
@@ -539,7 +531,6 @@ Por favor espera un momento.`;
     try {
       await this.sendInteractiveMenuAndLog(from, finalMenuMessage, 'acción final');
     } catch (error) {
-      this.logger.error(`Failed to send final action menu to ${from}, falling back to text message:`, error instanceof Error ? error.message : String(error));
       
       // Fallback a mensaje de texto simple
       const fallbackMessage = `✅ **Certificado Completado**
@@ -557,6 +548,5 @@ Por favor espera un momento.`;
 
     // Actualiza el estado de la sesión del usuario
     this.sessionManager.updateSessionState(from, SessionState.WAITING_FINAL_ACTION);
-    this.logger.log(`Session state for ${from} updated to WAITING_FINAL_ACTION.`);
   }
 } 

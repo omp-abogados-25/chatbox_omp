@@ -96,8 +96,6 @@ export class MemoryMfaService implements IMfaService {
         this.MFA_SESSION_TTL,
         sessionId
       );
-
-      this.logger.log(`MFA session created for phone ${phoneNumber}, session: ${sessionId}`);
       return session;
     } catch (error) {
       this.logger.error(`Failed to create MFA session for ${phoneNumber}:`, error);
@@ -150,7 +148,6 @@ export class MemoryMfaService implements IMfaService {
 
       if (isValid) {
         session.isVerified = true;
-        this.logger.log(`MFA verification successful for session: ${sessionId}`);
       } else {
         this.logger.warn(`Invalid TOTP code for session: ${sessionId}, attempt: ${session.attempts}`);
       }
@@ -190,8 +187,7 @@ export class MemoryMfaService implements IMfaService {
 
   async cleanupExpiredSessions(): Promise<void> {
     try {
-      // El cache en memoria ya maneja la expiración automáticamente
-      this.logger.log('MFA session cleanup completed');
+      // No se necesita implementación para Redis
     } catch (error) {
       this.logger.error('Failed to cleanup expired MFA sessions:', error);
     }

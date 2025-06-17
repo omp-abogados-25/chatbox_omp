@@ -77,13 +77,9 @@ export class WhatsAppProfileService implements IWhatsAppProfileService {
           profile, 
           timestamp: Date.now() 
         });
-
-        this.logger.log(`Profile obtained from WhatsApp API for ${phoneNumber}: ${profile.name}`);
         return profile;
 
       } catch (apiError) {
-        // Log del error específico pero continuar con fallback
-        this.logger.warn(`WhatsApp API unavailable for ${phoneNumber}: ${apiError.message}`);
         
         // Guardar fallback en cache
         this.profileCache.set(phoneNumber, { 
@@ -91,13 +87,11 @@ export class WhatsAppProfileService implements IWhatsAppProfileService {
           timestamp: Date.now() 
         });
 
-        this.logger.log(`Using fallback profile for ${phoneNumber}: ${fallbackProfile.name}`);
         return fallbackProfile;
       }
 
     } catch (error) {
       // Error general - crear perfil mínimo
-      this.logger.error(`Error getting profile for ${phoneNumber}:`, error.message);
       
       const emergencyProfile: WhatsAppProfile = {
         name: 'Usuario',
@@ -225,7 +219,6 @@ Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de
    */
   clearProfileCache(): void {
     this.profileCache.clear();
-    this.logger.log('Profile cache cleared');
   }
 
   /**

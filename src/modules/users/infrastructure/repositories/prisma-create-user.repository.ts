@@ -15,7 +15,8 @@ function toDomainEntity(prismaEntity: PrismaUser): User {
     entry_date: prismaEntity.entry_date ? prismaEntity.entry_date : String(prismaEntity.entry_date),
     salary: String(prismaEntity.salary),
     transportation_allowance: String(prismaEntity.transportation_allowance),
-    positionId: prismaEntity.positionId ?? null, // Asegura null si es undefined en Prisma
+    gender: (prismaEntity as any).gender,
+    positionId: prismaEntity.positionId ?? null,
     created_at: prismaEntity.created_at,
     updated_at: prismaEntity.updated_at,
   };
@@ -35,6 +36,12 @@ export class PrismaCreateUserRepository implements AbstractCreateUserRepository 
       transportation_allowance: data.transportation_allowance,
       entry_date: data.entry_date,
     };
+    
+    // Agregar gender si se proporciona
+    if (data.gender) {
+      (createData as any).gender = data.gender;
+    }
+    
     if (data.positionId !== undefined) {
       createData.position = {
         connect: {

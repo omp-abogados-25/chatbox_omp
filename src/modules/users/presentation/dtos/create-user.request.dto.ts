@@ -43,6 +43,14 @@ export class CreateUserRequestDto {
   transportation_allowance: string;
 
   @ApiPropertyOptional({
+    description: 'Género del usuario. M = Masculino, F = Femenino',
+    example: 'M',
+  })
+  @IsOptional()
+  @IsString({ message: 'El género debe ser una cadena de texto.' })
+  gender?: string;
+
+  @ApiPropertyOptional({
     description: 'ID del Cargo asignado al usuario (opcional, UUID).',
     example: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
     format: 'uuid',

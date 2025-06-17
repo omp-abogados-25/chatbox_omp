@@ -8,6 +8,7 @@ export interface CreateUserInput {
   entry_date: string;
   salary: string;
   transportation_allowance: string;
+  gender?: string;
   positionId?: string | null;
 }
 
@@ -19,6 +20,7 @@ export interface UpdateUserInput {
   entry_date?: string;
   salary?: string;
   transportation_allowance?: string;
+  gender?: string;
   positionId?: string | null;
 }
 

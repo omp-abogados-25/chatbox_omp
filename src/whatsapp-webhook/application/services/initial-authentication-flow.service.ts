@@ -58,10 +58,8 @@ export class InitialAuthenticationFlowService {
     try {
       await this.messageService.reply(from, message, messageId, phoneNumberId);
       this.transcriptionService.addMessage(from, 'system', message);
-      this.logger.debug(`[${from}] Sent system message via InitialAuthFlow: \"${message.substring(0, 100)}...\"`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`[${from}] Failed to send message via InitialAuthFlow. Error: ${errorMessage}`);
       this.transcriptionService.addMessage(from, 'system', `[System Error - IAF] Could not send reply.`);
     }
   }
@@ -90,7 +88,6 @@ Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de
     await this.sendMessageAndLog(from, welcomeMessage, messageId, phoneNumberId);
     session.documentType = DocumentType.CC; 
     this.sessionManager.updateSessionState(from, SessionState.WAITING_DOCUMENT_NUMBER);
-    this.logger.log(`[${from}] Initial welcome message sent by InitialAuthFlow. Session state set to WAITING_DOCUMENT_NUMBER. Document type defaulted to CC.`);
   }
 
   /**
@@ -112,14 +109,11 @@ Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de
     const profile = await this.profileService.getUserProfile(from);
     if (profile?.name && !session.clientName) {
       session.clientName = profile.name;
-      this.logger.log(`[${from}] New session via InitialAuthFlow. Pre-filled client name from WhatsApp profile: \"${profile.name}\".`);
     }
 
-    this.logger.log(`[${from}] Handling new user interaction via InitialAuthFlow. Intent: ${analysis.intent}, Extracted: ${JSON.stringify(analysis.extractedInfo)}`);
 
     if ((analysis.intent === 'REQUEST_CERTIFICATE' || analysis.intent === 'PROVIDE_PERSONAL_INFO') && analysis.extractedInfo?.documentNumber) {
       const normalizedDocumentNumber = String(analysis.extractedInfo.documentNumber).replace(/\\D/g, '');
-      this.logger.log(`[${from}] New session (InitialAuthFlow): Document number \"${normalizedDocumentNumber}\" extracted. Attempting direct verification.`);
       
       session.documentType = analysis.extractedInfo?.documentType || DocumentType.CC; 
       session.documentNumber = normalizedDocumentNumber; 
@@ -129,7 +123,6 @@ Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de
       return; 
     }
 
-    this.logger.log(`[${from}] New session (InitialAuthFlow): No scorable shortcut. Proceeding with standard welcome.`);
     await this.sendWelcomeMessageInternal(from, messageId, phoneNumberId, session, profile);
   }
 
@@ -158,7 +151,6 @@ Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de
 
     const terminationKeywords = ['finalizar', 'salir', 'terminar', 'cancelar', 'adios', 'adiós', 'chao'];
     if (terminationKeywords.some(keyword => lowerInput.includes(keyword))) {
-      this.logger.log(`[${from}] User initiated termination during document input (InitialAuthFlow).`);
       await this.sendMessageAndLog(from, '👋 Solicitud de finalización recibida. ¡Hasta pronto!', messageId, phoneNumberId);
       this.transcriptionService.clearConversation(from); 
       this.sessionManager.clearSession(from); 
@@ -168,13 +160,11 @@ Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de
     const numericId = rawInput.replace(/\\D/g, ''); 
 
     if (!numericId || numericId.length < 5 || numericId.length > 12) { 
-      this.logger.warn(`[${from}] Invalid document number by InitialAuthFlow: \"${rawInput}\" -> \"${numericId}\".`);
       await this.sendMessageAndLog(from, '⚠️ El número de documento no parece válido. Por favor, ingrésalo sin puntos o comas, y asegúrate de que tenga la longitud correcta (5-12 dígitos).', messageId, phoneNumberId);
       this.sessionManager.updateSessionState(from, SessionState.WAITING_DOCUMENT_NUMBER); 
       return;
     }
 
-    this.logger.log(`[${from}] InitialAuthFlow: Searching user. DocType: ${session.documentType}, DocNum: ${numericId}`);
     let user: DomainUser | null = null;
     try {
       user = await this.findUserByIdentificationNumberUseCase.execute(numericId);
@@ -187,7 +177,7 @@ Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de
     }
 
     if (user) {
-      this.logger.log(`[${from}] InitialAuthFlow: User found - ID=${user.id}, Name=${user.full_name}, Email=${user.email ? 'Present' : 'MISSING!'}`);
+      
       session.userId = user.id;
       session.clientName = user.full_name;
       session.documentNumber = user.identification_number; 
@@ -197,8 +187,9 @@ Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de
       session.transportationAllowance = user.transportation_allowance;
       session.entryDate = user.entry_date;
       session.issuingPlace = user.issuing_place;
+      session.gender = (user as any).gender || 'M';
 
-      this.logger.verbose(`[${from}] InitialAuthFlow: Session updated with user data. Proceeding to MFA.`);
+      this.logger.log(`[${from}] InitialAuthFlow: Session updated with user data. Gender asignado: '${session.gender}'. Proceeding to MFA.`);
       
       await this.mfaConversationFlowService.initiateMfaProcess(
         from,

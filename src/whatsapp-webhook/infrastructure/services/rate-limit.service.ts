@@ -217,13 +217,7 @@ export class RateLimitService implements IRateLimitService {
   }
 
   async cleanupExpiredBlocks(): Promise<void> {
-    try {
-      // Redis maneja automáticamente la expiración con TTL
-      // Esta función puede usarse para limpieza adicional si es necesario
-      this.logger.log('Rate limit cleanup completed');
-    } catch (error) {
-      this.logger.error('Failed to cleanup expired blocks:', error);
-    }
+    // No se necesita implementación para Redis
   }
 
   // Métodos adicionales para administración

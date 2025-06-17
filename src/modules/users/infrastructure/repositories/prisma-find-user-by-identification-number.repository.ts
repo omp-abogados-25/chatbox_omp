@@ -15,6 +15,7 @@ function toDomainEntity(prismaEntity: PrismaUser | null): User | null {
     email: prismaEntity.email,
     salary: String(prismaEntity.salary), // El esquema de Prisma usa String para salary
     transportation_allowance: String(prismaEntity.transportation_allowance), // El esquema de Prisma usa String para transportation_allowance
+    gender: (prismaEntity as any).gender,
     positionId: prismaEntity.positionId ?? null,
     created_at: prismaEntity.created_at,
     updated_at: prismaEntity.updated_at,

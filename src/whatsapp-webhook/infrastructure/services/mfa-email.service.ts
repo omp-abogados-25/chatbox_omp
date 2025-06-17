@@ -55,7 +55,6 @@ export class MfaEmailService implements IMfaEmailService {
       });
 
       if (emailSent) {
-        this.logger.log(`TOTP code sent successfully to ${email} for client ${clientName}`);
         return true;
       }
       this.logger.warn(`Failed to send TOTP code email to ${email} for client ${clientName} (emailService.sendEmail returned false)`);

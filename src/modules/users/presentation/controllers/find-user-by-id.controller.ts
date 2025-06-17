@@ -16,6 +16,7 @@ function mapDomainToResponseDto(domainEntity: User): UserResponseDto {
     entry_date: domainEntity.entry_date,
     salary: domainEntity.salary,
     transportation_allowance: domainEntity.transportation_allowance,
+    gender: domainEntity.gender,
     positionId: domainEntity.positionId,
     created_at: domainEntity.created_at,
     updated_at: domainEntity.updated_at,
