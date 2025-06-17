@@ -28,7 +28,6 @@ class MemoryRateLimitService implements IRateLimitService {
   private readonly BLOCK_DURATION = 1800; // 30 minutos de bloqueo (más razonable)
 
   constructor(private readonly cache: MemoryCacheService) {
-    this.logger.log('Memory Rate Limit service initialized');
   }
 
   async checkRateLimit(phoneNumber: string): Promise<RateLimitInfo> {
@@ -81,7 +80,6 @@ class MemoryRateLimitService implements IRateLimitService {
     };
 
     await this.cache.setex(`blacklist:${phoneNumber}`, blockDuration, JSON.stringify(blacklistedPhone));
-    this.logger.warn(`Phone ${phoneNumber} blocked. Reason: ${reason}`);
   }
 
   async isPhoneBlocked(phoneNumber: string): Promise<boolean> {

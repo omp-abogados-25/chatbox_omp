@@ -16,6 +16,7 @@ model User {
   email                   String    @unique /// Correo electrónico del usuario
   salary                  String    /// Salario del usuario
   transportation_allowance String    /// Auxilio de Transporte del usuario
+  gender                  String    @default("M") /// Género del usuario (M/F)
 
   positionId String? /// ID del Cargo asignado al usuario (opcional)
   position   Position? @relation(fields: [positionId], references: [id]) /// Relación con el cargo

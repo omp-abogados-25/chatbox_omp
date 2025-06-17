@@ -1,10 +1,14 @@
-import { Controller, Post, Get, Body, Query, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, UseGuards, HttpCode, Logger } from '@nestjs/common';
 import { VerifyTokenGuard } from '../guards/verify-token.guard';
 import { HandleIncomingMessageUseCase } from 'src/whatsapp-webhook/application';
 
 @Controller('webhook')
 export class WebhookController {
-  constructor(private readonly handleMessage: HandleIncomingMessageUseCase) {}
+  private readonly logger = new Logger(WebhookController.name);
+
+  constructor(
+    private readonly handleMessage: HandleIncomingMessageUseCase
+  ) {}
 
   @Post()
   @HttpCode(200)
@@ -20,6 +24,7 @@ export class WebhookController {
     @Query('hub.verify_token') token: string,
     @Query('hub.challenge') challenge: string,
   ) {
+    this.logger.log(`[WebhookController] -> Received verification request from WhatsApp Webhook`);
     return challenge;
   }
 }

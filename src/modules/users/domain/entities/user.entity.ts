@@ -7,6 +7,7 @@ export interface User {
   entry_date: string;
   salary: string;
   transportation_allowance: string;
+  gender: string;
   positionId?: string | null;
   created_at: Date;
   updated_at: Date;

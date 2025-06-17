@@ -96,8 +96,6 @@ export class MessageAnalysisService implements IMessageAnalysisService {
       originalMessage: message,
       reason: this.getDetectionReason(intent, extractedInfo, cleanMessage)
     };
-
-    this.logger.log(`Message analyzed: "${message}" -> Intent: ${intent} (${confidence})`);
     
     return analysis;
   }

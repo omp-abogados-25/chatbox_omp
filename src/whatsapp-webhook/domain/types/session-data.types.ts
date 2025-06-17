@@ -15,6 +15,7 @@ import { DocumentType, Session } from '../../domain'; // Asumiendo que Session y
  * @property {string | null} [transportationAllowance] - Auxilio de transporte, puede ser nulo.
  * @property {string | null} [entryDate] - Fecha de ingreso del empleado a la empresa, puede ser nulo.
  * @property {string | null} [issuingPlace] - Lugar de expedición del documento de identidad.
+ * @property {string} [gender] - Género del empleado ('M' para masculino, 'F' para femenino).
  * @property {string} [selectedSalaryTypeKey] - Clave interna para el tipo de salario seleccionado en el menú (ej: 'con_sueldo').
  * @property {string} [selectedSalaryTypeDisplay] - Texto descriptivo del tipo de salario seleccionado (ej: 'Con Sueldo').
  * @property {string} [mfaSessionId] - (Opcional si se maneja en un tipo de sesión más específico para MFA) ID de la sesión MFA activa.
@@ -30,6 +31,7 @@ export type SessionWithAllData = Session & {
   transportationAllowance?: string | null;
   entryDate?: string | null;
   issuingPlace?: string | null;
+  gender?: string;
   selectedSalaryTypeKey?: string;
   selectedSalaryTypeDisplay?: string;
   mfaSessionId?: string; // Incluido para que ConversationService pueda usar este tipo también

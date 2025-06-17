@@ -63,7 +63,6 @@ export class SessionManagerService {
 
   private setSessionTimeout(session: Session): void {
     session.timeoutId = setTimeout(async () => {
-      this.logger.warn(`⏰ Sesión expirada por inactividad para ${session.phoneNumber}`);
       
       // Enviar mensaje de despedida antes de cerrar sesión
       await this.sendInactivityMessage(session.phoneNumber);

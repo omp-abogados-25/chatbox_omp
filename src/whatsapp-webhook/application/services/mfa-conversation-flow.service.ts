@@ -69,7 +69,6 @@ Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de
     }
 
     try {
-      this.logger.log(`(MFA) Re-consultando usuario ${documentNumber} para obtener email actualizado.`);
       const userFromDb = await this.findUserByIdentificationNumberUseCase.execute(documentNumber);
 
       if (!userFromDb || !userFromDb.email) {
@@ -105,7 +104,6 @@ Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de
       const expiresInMilliseconds = new Date(mfaSessionData.expiresAt).getTime() - Date.now();
       const expiresInMinutes = Math.max(0, Math.floor(expiresInMilliseconds / (1000 * 60)));
 
-      this.logger.log(`Intentando enviar TOTP ${mfaSessionData.totpCode} a ${emailForMfa} para ${actualClientName}. Válido por ${expiresInMinutes} minutos.`);
       const emailSent = await this.mfaEmailService.sendTotpCode(
         emailForMfa,
         mfaSessionData.totpCode,
@@ -115,7 +113,6 @@ Soy tu asistente virtual y estoy aquí para ayudarte a obtener tu certificado de
 
       let mfaPromptMessage: string;
       if (emailSent) {
-        this.logger.log(`Código TOTP enviado exitosamente a ${emailForMfa}`);
         const maskedEmail = this.maskEmail(emailForMfa);
         mfaPromptMessage = `🎉 ¡Hola, ${actualClientName}! Ya estás dentro del sistema #OMPLover.
 

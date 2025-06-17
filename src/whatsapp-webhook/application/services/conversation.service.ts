@@ -77,11 +77,9 @@ export class ConversationService {
    * @returns {Promise<void>}
    */
   async handleMessage(from: string, body: string, messageId: string, phoneNumberId: string): Promise<void> {
-    this.logger.log(`[${from}] Orchestrator: Received message "${body.substring(0, 50)}..." (MsgID: ${messageId})`);
 
     const isBlocked = await this.rateLimitService.isPhoneBlocked(from);
     if (isBlocked) {
-      this.logger.warn(`[${from}] Orchestrator: Message processing HALTED. User is BLOCKED.`);
       await this.handleBlockedState(from, messageId, phoneNumberId);
       return;
     }
@@ -90,11 +88,9 @@ export class ConversationService {
     const isNewSession = !session;
 
     if (isNewSession) {
-      this.logger.log(`[${from}] Orchestrator: No existing session. Creating new one.`);
       session = this.sessionManager.createSession(from) as SessionWithAllData;
     } else {
       this.sessionManager.updateSessionActivity(from);
-      this.logger.log(`[${from}] Orchestrator: Existing session found. State: ${session.state}`);
     }
     
     const currentSession = session;
@@ -110,15 +106,12 @@ export class ConversationService {
     };
 
     const analysis: any = await this.messageAnalysisService.analyzeMessage(body, context);
-    this.logger.verbose(`[${from}] Orchestrator: Message analysis result - Intent: ${analysis.intent}`);
     
     this.transcriptionService.addMessage(from, 'user', body);
     
     if (isNewSession) {
-      this.logger.log(`[${from}] Orchestrator: New session. Delegating to InitialAuthenticationFlowService.`);
       await this.initialAuthenticationFlowService.handleNewUserInteraction(from, currentSession, analysis, messageId, phoneNumberId);
     } else {
-      this.logger.log(`[${from}] Orchestrator: Existing session. Delegating to handleExistingSession router.`);
       await this.handleExistingSession(from, currentSession, analysis, messageId, phoneNumberId);
     }
   }
@@ -140,10 +133,8 @@ export class ConversationService {
     try {
       await this.messageService.reply(from, message, messageId, phoneNumberId);
       this.transcriptionService.addMessage(from, 'system', message);
-      this.logger.debug(`[${from}] Orchestrator: Sent system message: "${message.substring(0, 70)}..."`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`[${from}] Orchestrator: Failed to send message. Error: ${errorMessage}`);
       this.transcriptionService.addMessage(from, 'system', `[System Error - Orchestrator] Reply failed.`);
     }
   }
@@ -171,7 +162,6 @@ export class ConversationService {
       : `🚫 Tu número (${from}) está permanentemente bloqueado.\n${blockDetail}`;
     blockMessage += "\n\nSi consideras que esto es un error, por favor contacta a Recursos Humanos o al departamento de TI.";
     
-    this.logger.warn(`[${from}] Orchestrator: Informing user of BLOCKED state. Details: ${JSON.stringify(blacklistedInfo || {})}`);
     await this.messageService.reply(from, blockMessage, messageId, phoneNumberId);
   }
 
@@ -192,51 +182,41 @@ export class ConversationService {
    * @returns {Promise<void>}
    */
   private async handleExistingSession(from: string, session: SessionWithAllData, analysis: any, messageId: string, phoneNumberId: string): Promise<void> {
-    this.logger.log(`[${from}] Orchestrator Router: Current state ${session.state}. Input: "${analysis.originalMessage?.substring(0,50)}...", Intent: ${analysis.intent}`);
 
     const onSubFlowCompletedAndAuthenticated = async () => {
-      this.logger.log(`[${from}] Orchestrator: A sub-flow (e.g., certificate) completed. User is AUTHENTICATED. Prompting for next action.`);
       await this.sendMessageAndLog(from, '¿Necesitas algo más? Puedes solicitar otro certificado o finalizar la conversación.', messageId, phoneNumberId);
     };
 
     switch (session.state) {
       case SessionState.WAITING_DOCUMENT_NUMBER:
-        this.logger.log(`[${from}] Orchestrator Router: State WAITING_DOCUMENT_NUMBER. Delegating to InitialAuthenticationFlowService.`);
         await this.initialAuthenticationFlowService.processDocumentNumberInput(from, analysis.originalMessage, messageId, phoneNumberId, session);
         break;
       
       case SessionState.WAITING_MFA_VERIFICATION:
-        this.logger.log(`[${from}] Orchestrator Router: State WAITING_MFA_VERIFICATION. Delegating to MfaConversationFlowService.`);
         await this.mfaConversationFlowService.handleMfaVerification(
           from, 
           analysis.originalMessage, 
           messageId, 
           phoneNumberId,
           async () => { 
-            this.logger.log(`[${from}] Orchestrator: MFA successful callback. Transitioning to certificate menu.`);
             await this.certificateConversationFlowService.showCertificateMenu(from, messageId, phoneNumberId);
           }
         );
         break;
       
       case SessionState.AUTHENTICATED:
-        this.logger.log(`[${from}] Orchestrator Router: State AUTHENTICATED. Analyzing intent: ${analysis.intent}`);
         if (analysis.intent === MessageIntent.REQUEST_CERTIFICATE || analysis.originalMessage?.toLowerCase().includes('certificado')) {
-            this.logger.log(`[${from}] Orchestrator: Authenticated user certificate request. Delegating to CertificateConversationFlowService.`);
             await this.certificateConversationFlowService.showCertificateMenu(from, messageId, phoneNumberId);
         } else if (analysis.originalMessage?.toLowerCase().includes('finalizar')) {
-            this.logger.log(`[${from}] Orchestrator: Authenticated user requested session termination.`);
             this.sessionManager.clearSession(from);
             this.transcriptionService.clearConversation(from);
             await this.sendMessageAndLog(from, 'Sesión finalizada. ¡Gracias por usar nuestros servicios! 👋', messageId, phoneNumberId);
         } else {
-            this.logger.log(`[${from}] Orchestrator: Authenticated user unhandled message. Prompting action.`);
             await this.sendMessageAndLog(from, '¿Necesitas algo más? Puedes solicitar otro certificado escribiendo "certificado" o "finalizar" para terminar.', messageId, phoneNumberId);
         }
         break;
 
       case SessionState.WAITING_CERTIFICATE_TYPE:
-        this.logger.log(`[${from}] Orchestrator Router: State ${session.state}. Delegating to CertificateConversationFlowService for menu selection.`);
         await this.certificateConversationFlowService.handleMenuSelection(
           from,
           analysis.originalMessage,
@@ -247,7 +227,6 @@ export class ConversationService {
         break;
       
       case SessionState.WAITING_FINAL_ACTION:
-        this.logger.log(`[${from}] Orchestrator Router: State ${session.state}. Delegating to CertificateConversationFlowService for final action selection.`);
         await this.certificateConversationFlowService.handleMenuSelection(
           from,
           analysis.originalMessage,
@@ -259,15 +238,12 @@ export class ConversationService {
       
       case SessionState.BLOCKED:
       case SessionState.RATE_LIMITED:
-        this.logger.warn(`[${from}] Orchestrator Router: Re-handling BLOCKED/RATE_LIMITED state.`);
         await this.handleBlockedState(from, messageId, phoneNumberId);
         break;
       
       default:
-        this.logger.error(`[${from}] Orchestrator Router: Unhandled or unknown session state: "${session.state}". Resetting session.`);
         this.sessionManager.clearSession(from);
         const newSessionForReset = this.sessionManager.createSession(from);
-        this.logger.log(`[${from}] Orchestrator: Session reset. Delegating to InitialAuthenticationFlowService for new interaction.`);
         await this.initialAuthenticationFlowService.handleNewUserInteraction(from, newSessionForReset, analysis, messageId, phoneNumberId);
         break;
     }

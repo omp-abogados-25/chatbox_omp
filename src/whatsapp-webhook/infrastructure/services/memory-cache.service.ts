@@ -125,10 +125,6 @@ export class MemoryCacheService {
         cleaned++;
       }
     }
-
-    if (cleaned > 0) {
-      this.logger.debug(`Cleaned ${cleaned} expired cache items`);
-    }
   }
 
   // Eventos simulados (Redis compatibility)

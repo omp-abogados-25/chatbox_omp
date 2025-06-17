@@ -10,6 +10,7 @@ export type TClient = {
   startDate: string;
   salaryInLetters: string;
   salaryFormatCurrency: string;
+  gender?: string;
   email?: string;
   phone?: string;
 }
@@ -26,6 +27,7 @@ export class Client {
    * @param startDate 
    * @param salaryInLetters 
    * @param salaryFormatCurrency 
+   * @param gender
    * @param email
    * @param phone 
    */
@@ -38,6 +40,7 @@ export class Client {
   public readonly startDate: string;
   public readonly salaryInLetters: string;
   public readonly salaryFormatCurrency: string;
+  public readonly gender?: string;
   public readonly email?: string;
   public readonly phone?: string;
 
@@ -51,6 +54,7 @@ export class Client {
     this.startDate = client.startDate;
     this.salaryInLetters = client.salaryInLetters;
     this.salaryFormatCurrency = client.salaryFormatCurrency;
+    this.gender = client.gender;
     this.email = client.email;
     this.phone = client.phone;
   }

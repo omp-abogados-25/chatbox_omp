@@ -34,8 +34,6 @@ export class Api2PdfService {
         }
 
         const tempPdfPath = path.resolve(tempWorkingDir, `_temp_cert_pdf_${Date.now()}.pdf`);
-        
-        this.logger.log('Sending HTML to api2pdf.com for conversion...');
 
         try {
             const requestConfig: AxiosRequestConfig = {
@@ -61,11 +59,8 @@ export class Api2PdfService {
             );
 
             if (!response.data.success || !response.data.pdf) {
-                this.logger.error('api2pdf.com returned an error or no PDF URL.', response.data);
                 throw new Error(response.data.error || 'Failed to generate PDF via api2pdf.com');
             }
-
-            this.logger.log(`PDF URL received from api2pdf.com. Downloading...`);
 
             const pdfDownloadResponse: AxiosResponse<ArrayBuffer> = await firstValueFrom(
                 this.httpService.get(response.data.pdf, { responseType: 'arraybuffer' })
@@ -74,8 +69,6 @@ export class Api2PdfService {
             // Convert ArrayBuffer to a Node.js Buffer before writing
             const pdfBuffer = Buffer.from(pdfDownloadResponse.data);
             await fs.writeFile(tempPdfPath, pdfBuffer);
-            
-            this.logger.log(`PDF downloaded and saved to: ${tempPdfPath}`);
             return tempPdfPath;
         } catch (error) {
             this.logger.error('Error during PDF generation with api2pdf.com:', error.response?.data || error.message);
