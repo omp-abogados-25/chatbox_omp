@@ -739,11 +739,11 @@
 
                 // Calcular el espacio necesario para la firma completa
                 const MAX_LINES_PER_PAGE = 65;
-                const MINIMUM_LINES_NEEDED_FOR_SIGNATURE = 25; // Líneas libres necesarias para la firma
+                const MINIMUM_LINES_NEEDED_FOR_SIGNATURE = 12; // Líneas libres necesarias para la firma (reducido para oficio)
 
                 console.log(`Página final de firma (${finalPageIdxForSignature + 1}) tiene ${linesForFlexGrow} líneas de contenido.`);
 
-                // Verificar si quedan al menos 25 líneas libres para la firma
+                // Verificar si quedan al menos 12 líneas libres para la firma
                 const lineasLibresDisponibles = MAX_LINES_PER_PAGE - linesForFlexGrow;
                 console.log(`Líneas libres disponibles: ${lineasLibresDisponibles} de ${MINIMUM_LINES_NEEDED_FOR_SIGNATURE} necesarias.`);
 
