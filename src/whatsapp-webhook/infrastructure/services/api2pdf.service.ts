@@ -42,15 +42,17 @@ export class Api2PdfService {
             const payload = {
                 html: htmlContent,
                 options: {
-                    delay: 2500, // Wait 2.5s for JS pagination scripts to run
-                    // Use custom dimensions based on the template's CSS (970.67x1168.67px at 96 DPI)
+                    delay: 1000,
                     width: 10.11,
-                    height: 12.17,
-                    // Set all margins to 0 to respect the original CSS
+                    height: 15.5,
                     marginTop: 0,
                     marginBottom: 0,
                     marginLeft: 0,
                     marginRight: 0,
+                    printBackground: true,
+                    preferCSSPageSize: true,
+                    displayHeaderFooter: false,
+                    scale: 1.0,
                 },
             };
 
