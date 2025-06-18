@@ -716,7 +716,7 @@
 
                 const linesInCurrentFinalContainer = countRenderedLinesInContainer(targetContainerForSignature);
                 console.log(`Contenedor para firma (Pág ${finalPageIdxForSignature + 1}) tiene ${linesInCurrentFinalContainer} líneas ANTES de ajuste de firma.`);
-                const SIGNATURE_MOVE_THRESHOLD = 35;
+                const SIGNATURE_MOVE_THRESHOLD = 65; // Aumentado para formato oficio
 
                 if (linesInCurrentFinalContainer >= SIGNATURE_MOVE_THRESHOLD && targetContainerForSignature.children.length > 0) {
                     const childrenOfFinal = Array.from(targetContainerForSignature.children).filter(el => !el.classList.contains('seccion-contenido-firma-dinamica'));
