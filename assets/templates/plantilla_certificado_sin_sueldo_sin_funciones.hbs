@@ -12,7 +12,8 @@
         rel="stylesheet">
 
     <style type="text/css">
-    @import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&display=swap');
+
         * {
             font-family: 'Archivo Narrow', Arial, sans-serif;
             line-height: 1.5;
@@ -39,7 +40,7 @@
 
         .pagina-documento {
             width: 970.67px;
-            height: 1168.67px;
+            height: 1488px;
             margin: 20px auto;
             display: flex;
             flex-direction: column;
@@ -61,7 +62,7 @@
         }
 
         .seccion-cuerpo-pagina {
-            padding: 180px 140px 80px 140px;
+            padding: 360px 140px 80px 140px;
             overflow: visible;
             position: relative;
             z-index: 2;
@@ -69,7 +70,7 @@
         }
 
         .seccion-contenido-firma {
-            height: 548px;
+            height: 867px;
             flex-shrink: 0;
             width: 100%;
             display: flex;
@@ -83,7 +84,7 @@
         .fondo-grafico-pie {
             background: url('{{footerImageFileUrl}}') no-repeat left bottom;
             background-size: contain;
-            height: 548px;
+            height: 867px;
             width: 100%;
             position: absolute;
             bottom: 0;
@@ -144,7 +145,7 @@
         }
 
         .c4:not(:last-child) {
-            margin-bottom: 1em;
+            margin-bottom: 4em;
         }
 
         .c10 {
@@ -156,7 +157,7 @@
         }
 
         .c8 {
-            padding-bottom: 20pt;
+            padding-bottom: 80pt;
             line-height: 1.5;
             orphans: 2;
             widows: 2;
@@ -440,8 +441,8 @@
                 <span class="c3 c1">{{name}}</span>
                 <span class="c0"> {{isIdentified}} con {{documentType}} No. </span>
                 <span class="c3 c1">{{documentNumber}}</span>
-                <span class="c0"> de {{cityDocument}}</span>
-                <span class="c0">, se encuentra vinculado a trav&eacute;s de contrato a t&eacute;rmino indefinido en
+                <span class="c0"> de {{cityDocument}} se encuentra {{isLinked}} a trav&eacute;s de contrato a
+                    t&eacute;rmino indefinido en
                     esta oficina de
                     abogados </span>
                 <span class="c3">OLFA MARIA PEREZ ORELLANOS ABOGADOS S.A.S</span>

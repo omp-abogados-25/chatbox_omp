@@ -62,7 +62,7 @@
 
         .pagina-documento {
             width: 970.67px;
-            height: 1168.67px;
+            height: 1488px;
             margin: 20px auto;
             display: flex;
             flex-direction: column;
@@ -92,7 +92,7 @@
         }
 
         .seccion-contenido-firma {
-            height: 548px;
+            height: 867px;
             flex-shrink: 0;
             width: 100%;
             display: flex;
@@ -106,7 +106,7 @@
         .fondo-grafico-pie {
             background: url('{{footerImageFileUrl}}') no-repeat left bottom;
             background-size: contain;
-            height: 548px;
+            height: 867px;
             width: 100%;
             position: absolute;
             bottom: 0;
@@ -465,8 +465,8 @@
                 <span class="c3 c1">{{name}}</span>
                 <span class="c0"> {{isIdentified}} con {{documentType}} No. </span>
                 <span class="c3 c1">{{documentNumber}}</span>
-                <span class="c0"> de {{cityDocument}}</span>
-                <span class="c0">, se encuentra vinculado a trav&eacute;s de contrato a t&eacute;rmino indefinido en
+                <span class="c0"> de {{cityDocument}} se encuentra {{isLinked}} a trav&eacute;s de contrato a
+                    t&eacute;rmino indefinido en
                     esta oficina de
                     abogados </span>
                 <span class="c3">OLFA MARIA PEREZ ORELLANOS ABOGADOS S.A.S</span>
@@ -552,12 +552,6 @@
                 for (const element of childrenToCount) {
                     if (element.style.display === 'none' && !element.dataset.toBeMoved) continue;
 
-                    if (element.tagName === 'UL') {
-                        lines += 1; // Sigue contando UL como 1 línea para la lógica de firma
-                        // console.log(`countRenderedLines: UL encontrado, contando como 1 línea marcador.`);
-                        continue;
-                    }
-
                     const style = window.getComputedStyle(element);
                     let lineHeight = parseFloat(style.lineHeight);
                     const fontSize = parseFloat(style.fontSize);
@@ -565,13 +559,14 @@
                     else if (!isNaN(fontSize) && style.lineHeight.match(/^[0-9.]+$/)) lineHeight = fontSize * parseFloat(style.lineHeight);
                     if (isNaN(lineHeight) || lineHeight === 0) lineHeight = 22;
 
+                    // Contar todas las líneas reales basándose en la altura, incluyendo UL
                     lines += Math.ceil(element.offsetHeight / lineHeight);
                 }
                 return lines;
             }
 
             const allPages = document.querySelectorAll('.pagina-documento');
-            const LINE_LIMIT_FOR_OVERFLOW_CONFIG = 42; // Aumentado de 38 a 41
+            const LINE_LIMIT_FOR_OVERFLOW_CONFIG = 65; // Aumentado de 38 a 41
             const TEXT_AVERAGE_LINE_HEIGHT_PX = 19;
             const PAGE_MAX_CONTENT_HEIGHT_PX = LINE_LIMIT_FOR_OVERFLOW_CONFIG * TEXT_AVERAGE_LINE_HEIGHT_PX; // Ahora será 41 * 19 = 779px
             const UL_BASE_HEIGHT_COST_PX = 5;
@@ -741,20 +736,63 @@
 
                 const linesForFlexGrow = countRenderedLinesInContainer(targetContainerForSignature);
                 const FEW_LINES_THRESHOLD_FOR_GROW = 25;
-                console.log(`Página final de firma (${finalPageIdxForSignature + 1}) tiene ${linesForFlexGrow} líneas de texto (antes de añadir firma y ajustar flex).`);
-                if (linesForFlexGrow < FEW_LINES_THRESHOLD_FOR_GROW) {
-                    targetContainerForSignature.style.flexGrow = '0';
-                    console.log(`Ajustado flex-grow a 0 para la página de la firma (${finalPageIdxForSignature + 1}).`);
+
+                // Calcular el espacio necesario para la firma completa
+                const MAX_LINES_PER_PAGE = 65;
+                const MINIMUM_LINES_NEEDED_FOR_SIGNATURE = 25; // Líneas libres necesarias para la firma
+
+                console.log(`Página final de firma (${finalPageIdxForSignature + 1}) tiene ${linesForFlexGrow} líneas de contenido.`);
+
+                // Verificar si quedan al menos 25 líneas libres para la firma
+                const lineasLibresDisponibles = MAX_LINES_PER_PAGE - linesForFlexGrow;
+                console.log(`Líneas libres disponibles: ${lineasLibresDisponibles} de ${MINIMUM_LINES_NEEDED_FOR_SIGNATURE} necesarias.`);
+
+                if (lineasLibresDisponibles < MINIMUM_LINES_NEEDED_FOR_SIGNATURE && (finalPageIdxForSignature + 1) < allPages.length) {
+                    console.log(`No hay suficiente espacio para la firma en la página ${finalPageIdxForSignature + 1}. Moviendo a la siguiente página.`);
+
+                    // Mover a la siguiente página
+                    const nextPageForSigDiv = allPages[finalPageIdxForSignature + 1];
+                    const bodyInNextPageForSig = nextPageForSigDiv.querySelector('.seccion-cuerpo-pagina');
+                    if (bodyInNextPageForSig) {
+                        targetContainerForSignature = bodyInNextPageForSig;
+                        finalPageIdxForSignature = finalPageIdxForSignature + 1;
+                        console.log(`Firma movida a la página ${finalPageIdxForSignature + 1} para evitar cortes.`);
+
+                        // Recalcular las líneas en la nueva página
+                        const newLinesForFlexGrow = countRenderedLinesInContainer(targetContainerForSignature);
+                        if (newLinesForFlexGrow < FEW_LINES_THRESHOLD_FOR_GROW) {
+                            targetContainerForSignature.style.flexGrow = '0';
+                        } else {
+                            targetContainerForSignature.style.flexGrow = '1';
+                        }
+                    }
                 } else {
-                    targetContainerForSignature.style.flexGrow = '1';
-                    console.log(`Ajustado flex-grow a 1 para la página de la firma (${finalPageIdxForSignature + 1}).`);
+                    // Aplicar la lógica normal de flex-grow
+                    if (linesForFlexGrow < FEW_LINES_THRESHOLD_FOR_GROW) {
+                        targetContainerForSignature.style.flexGrow = '0';
+                        console.log(`Ajustado flex-grow a 0 para la página de la firma (${finalPageIdxForSignature + 1}).`);
+                    } else {
+                        targetContainerForSignature.style.flexGrow = '1';
+                        console.log(`Ajustado flex-grow a 1 para la página de la firma (${finalPageIdxForSignature + 1}).`);
+                    }
                 }
+
+                // Crear el HTML de la firma
+                const signatureInnerHtmlWithLineCount = `
+                    <p class="c9-firma c11-firma"><span class="c2 c0">Cordialmente, </span></p>
+                    <div class="firma">
+                        <img src="{{firmaImageFileUrl}}" alt="Firma OMP Abogados">
+                    </div>
+                    <p class="c9-firma c11-firma"><span class="c2 c0">{{nameFirmante}}</span></p>
+                    <p class="c9-firma c11-firma"><span class="c2 c0">{{positionFirmante}}</span></p>
+                    <p class="c12-firma"><span class="c2 c3">OMP Abogados</span></p>
+                `;
 
                 const firmaWrapperDiv = document.createElement('div');
                 firmaWrapperDiv.className = 'seccion-contenido-firma-dinamica';
                 const firmaInnerDiv = document.createElement('div');
                 firmaInnerDiv.className = 'contenido-footer';
-                firmaInnerDiv.innerHTML = signatureInnerHtml;
+                firmaInnerDiv.innerHTML = signatureInnerHtmlWithLineCount;
                 firmaWrapperDiv.appendChild(firmaInnerDiv);
                 targetContainerForSignature.appendChild(firmaWrapperDiv);
                 console.log('Firma dinámica añadida a Pág ', finalPageIdxForSignature + 1);
