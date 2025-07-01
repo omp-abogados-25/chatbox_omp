@@ -1,5 +1,6 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiCreatedResponse, ApiBadRequestResponse } from '@nestjs/swagger';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiCreatedResponse, ApiBadRequestResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { CreatePositionUseCase } from '../../application/use-cases';
 import { CreatePositionRequestDto, PositionResponseDto } from '../dtos';
 import { Position } from '../../domain/entities';
@@ -17,7 +18,9 @@ function mapDomainToResponseDto(domainEntity: Position): PositionResponseDto {
 }
 
 @ApiTags('Positions')
-@Controller('integrations/positions')
+@Controller('positions')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class CreatePositionController {
   constructor(
     private readonly createPositionUseCase: CreatePositionUseCase,
@@ -28,13 +31,8 @@ export class CreatePositionController {
   @ApiOperation({ summary: 'Crear un nuevo cargo', description: 'Registra un nuevo cargo en el sistema.' })
   @ApiCreatedResponse({ description: 'El cargo ha sido creado exitosamente.', type: PositionResponseDto })
   @ApiBadRequestResponse({ description: 'Los datos proporcionados para crear el cargo son inválidos.' })
-  async create(@Body() createPositionDto: CreatePositionRequestDto[]): Promise<PositionResponseDto> {
-    // const newPositionDomain = await this.createPositionUseCase.execute(createPositionDto);
-    // return mapDomainToResponseDto(newPositionDomain);
-    let newPositionDomain;
-    for (const position of createPositionDto) {
-      newPositionDomain = await this.createPositionUseCase.execute(position);
-    }
+  async create(@Body() createPositionDto: CreatePositionRequestDto): Promise<PositionResponseDto> {
+    const newPositionDomain = await this.createPositionUseCase.execute(createPositionDto);
     return mapDomainToResponseDto(newPositionDomain);
   }
 } 

@@ -1,5 +1,6 @@
-import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
+import { Controller, Get, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { FindAllRoleFunctionsUseCase } from '../../application/use-cases';
 import { RoleFunctionResponseDto } from '../dtos';
 import { RoleFunction } from '../../domain/entities';
@@ -16,7 +17,9 @@ function mapDomainToResponseDto(domainEntity: RoleFunction): RoleFunctionRespons
 }
 
 @ApiTags('Role Functions')
-@Controller('integrations/role-functions')
+@Controller('role-functions')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class FindAllRoleFunctionsController {
   constructor(
     private readonly findAllRoleFunctionsUseCase: FindAllRoleFunctionsUseCase,

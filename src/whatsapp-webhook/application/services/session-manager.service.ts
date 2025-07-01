@@ -1,5 +1,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
-import { Session, SessionState, IWhatsappClient } from '../../domain';
+import { Session, SessionState, IWhatsappClient, SessionTrace, SessionTraceStatus } from '../../domain';
+import { SessionTraceService } from './session-trace.service';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class SessionManagerService {
@@ -9,6 +11,7 @@ export class SessionManagerService {
 
   constructor(
     @Inject('IWhatsappClient') private readonly whatsappClient: IWhatsappClient,
+    private readonly sessionTraceService: SessionTraceService,
   ) {}
 
   createSession(phoneNumber: string): Session {
@@ -20,6 +23,13 @@ export class SessionManagerService {
     
     // Configurar timeout
     this.setSessionTimeout(session);
+    
+    // 🔥 CREAR TRAZA DE SESIÓN INICIADA con UUID único
+    const sessionId = randomUUID();
+    this.sessionTraceService.startSessionTrace(phoneNumber, sessionId)
+      .catch(error => {
+        this.logger.error(`❌ Error al crear traza de sesión para ${phoneNumber}:`, error);
+      });
     
     return session;
   }
@@ -53,22 +63,40 @@ export class SessionManagerService {
     }
   }
 
-  clearSession(phoneNumber: string): void {
+  clearSession(phoneNumber: string, reason: string = 'Sesión finalizada'): void {
     const session = this.sessions.get(phoneNumber);
     if (session) {
       this.clearSessionTimeout(session);
       this.sessions.delete(phoneNumber);
+      
+      // 🔥 FINALIZAR TRAZA DE SESIÓN
+      this.sessionTraceService.finishSession(phoneNumber, reason)
+        .catch(error => {
+          this.logger.error(`❌ Error al finalizar traza de sesión para ${phoneNumber}:`, error);
+        });
     }
   }
 
   private setSessionTimeout(session: Session): void {
     session.timeoutId = setTimeout(async () => {
       
+      // 🔥 MARCAR SESIÓN COMO EXPIRADA EN LA TRAZA
+      await this.sessionTraceService.markSessionExpired(
+        session.phoneNumber, 
+        'Sesión expirada por inactividad (5 minutos sin respuesta)'
+      ).catch(error => {
+        this.logger.error(`❌ Error al marcar sesión como expirada:`, error);
+      });
+      
       // Enviar mensaje de despedida antes de cerrar sesión
       await this.sendInactivityMessage(session.phoneNumber);
       
-      // Limpiar sesión
-      this.clearSession(session.phoneNumber);
+      // Limpiar sesión (sin crear otra traza porque ya se marcó como expirada)
+      const sessionData = this.sessions.get(session.phoneNumber);
+      if (sessionData) {
+        this.clearSessionTimeout(sessionData);
+        this.sessions.delete(session.phoneNumber);
+      }
     }, this.SESSION_TIMEOUT_MINUTES * 60 * 1000);
   }
 

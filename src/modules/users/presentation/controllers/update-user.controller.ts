@@ -1,5 +1,6 @@
-import { Controller, Put, Param, Body, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiBadRequestResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Put, Param, Body, HttpCode, HttpStatus, NotFoundException, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiBadRequestResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { UpdateUserUseCase } from '../../application/use-cases';
 import { UpdateUserRequestDto, UserResponseDto } from '../dtos';
 import { User } from '../../domain/entities';
@@ -16,6 +17,8 @@ function mapDomainToResponseDto(domainEntity: User): UserResponseDto {
     salary: domainEntity.salary,
     transportation_allowance: domainEntity.transportation_allowance,
     gender: domainEntity.gender,
+    can_login: domainEntity.can_login,
+    password: domainEntity.password,
     positionId: domainEntity.positionId,
     created_at: domainEntity.created_at,
     updated_at: domainEntity.updated_at,
@@ -23,7 +26,9 @@ function mapDomainToResponseDto(domainEntity: User): UserResponseDto {
 }
 
 @ApiTags('Users')
-@Controller('integrations/users')
+@Controller('users')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class UpdateUserController {
   constructor(
     private readonly updateUserUseCase: UpdateUserUseCase,

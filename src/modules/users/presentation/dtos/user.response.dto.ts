@@ -31,6 +31,19 @@ export class UserResponseDto {
   })
   gender: string;
 
+  @ApiProperty({ 
+    description: 'Indica si el usuario puede iniciar sesión', 
+    example: false 
+  })
+  can_login: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Contraseña del usuario (solo se muestra si está configurada)',
+    example: null,
+    nullable: true,
+  })
+  password?: string | null;
+
   @ApiPropertyOptional({
     description: 'ID del Cargo asignado al usuario (UUID).',
     example: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',

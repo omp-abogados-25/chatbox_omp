@@ -16,6 +16,7 @@ export { EchoMessageService } from './echo-message.service';
 
 // Servicios de gestión de estado
 export { SessionManagerService } from './session-manager.service';
+export { SessionTraceService } from './session-trace.service';
 export { ChatTranscriptionService } from './chat-transcription.service';
 
 // Servicios de datos

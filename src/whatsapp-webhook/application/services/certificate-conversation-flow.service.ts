@@ -2,9 +2,13 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { SessionManagerService } from './session-manager.service';
 import { EchoMessageService } from './echo-message.service';
 import { ChatTranscriptionService } from './chat-transcription.service';
+import { SessionTraceService } from './session-trace.service';
 import { SessionState, DocumentType, IEmailService } from '../../domain';
+import { CertificateRequestRepository } from '../../domain/interfaces';
 import { FindFunctionDetailsByPositionIdUseCase } from '../../../modules/position-functions/application/use-cases';
 import { FindPositionByIdUseCase } from '../../../modules/positions/application/use-cases';
+import { CreateCertificateRequestUseCase, UpdateCertificateRequestStatusUseCase } from '../../../modules/certificate-requests/application/use-cases';
+import { CertificateRequestStatus } from '../../domain/entities';
 import { Position as DomainPosition } from '../../../modules/positions/domain/entities/position.entity';
 import { FunctionDetailItem } from '../../../modules/position-functions/domain/repositories';
 import { SessionWithAllData } from '../../domain/types/session-data.types';
@@ -27,9 +31,13 @@ export class CertificateConversationFlowService {
     @Inject('IEmailService') private readonly emailService: IEmailService,
     private readonly messageService: EchoMessageService,
     private readonly transcriptionService: ChatTranscriptionService,
+    private readonly sessionTraceService: SessionTraceService,
     private readonly findFunctionDetailsByPositionIdUseCase: FindFunctionDetailsByPositionIdUseCase,
     private readonly findPositionByIdUseCase: FindPositionByIdUseCase,
     private readonly clientService: ClientService,
+    private readonly createCertificateRequestUseCase: CreateCertificateRequestUseCase,
+    private readonly updateCertificateRequestStatusUseCase: UpdateCertificateRequestStatusUseCase,
+    @Inject('CertificateRequestRepository') private readonly certificateRequestRepository: CertificateRequestRepository,
   ) {}
 
   /**
@@ -312,7 +320,7 @@ export class CertificateConversationFlowService {
       if (input === 'generate_another' || input === 'otro' || input === 'certificado') {
         await this.showCertificateMenu(from, messageId, phoneNumberId);
       } else if (input === 'finish_session' || input === 'finalizar') {
-        this.sessionManager.clearSession(from);
+        this.sessionManager.clearSession(from, 'Sesión finalizada por el usuario');
         await this.sendMessageAndLog(from, 'Sesión finalizada. ¡Gracias por usar nuestros servicios! 👋', messageId, phoneNumberId);
       } else {
         // Si la selección no es válida, muestra el menú nuevamente
@@ -356,10 +364,91 @@ export class CertificateConversationFlowService {
       await onGenericAuthenticatedStateCallback();
       return;
     }
+
     const loadingMessage = `⏳ Procesando tu solicitud de certificado laboral solicitado
 
 Por favor espera un momento.`;
     await this.sendMessageAndLog(from, loadingMessage, messageId, phoneNumberId);
+
+    // 🔥 CREAR SOLICITUD DE CERTIFICADO EN LA BASE DE DATOS
+    let certificateRequestId: string | null = null;
+    
+    try {
+      // 1. Crear la solicitud inicial con estado PENDING
+      const chatHistory = this.transcriptionService.getTranscription(from);
+      
+      const certificateRequest = await this.createCertificateRequestUseCase.execute({
+        whatsapp_number: from,
+        certificate_type: finalCertificateTypeKey,
+        requester_name: session.clientName,
+        requester_document: session.documentNumber,
+        request_data: {
+          documentType: session.documentType,
+          issuingPlace: session.issuingPlace,
+          entryDate: session.entryDate,
+          salary: session.salary,
+          transportationAllowance: session.transportationAllowance,
+          gender: session.gender,
+          email: session.email,
+          positionId: session.positionId,
+          certificateDisplayInfo: certificateDisplayInfo,
+        },
+        interaction_messages: chatHistory,
+      });
+
+      certificateRequestId = certificateRequest.id;
+      this.logger.log(`📋 Solicitud de certificado creada: ${certificateRequestId} para ${from}`);
+
+      // 🔥 REGISTRAR EN TRAZA DE SESIÓN - PROCESANDO CERTIFICADO
+      // Verificar si es un certificado adicional (usuario ya autenticado)
+      const isAdditionalCertificate = session.state === SessionState.AUTHENTICATED;
+      
+      if (isAdditionalCertificate) {
+        // Crear nueva traza para certificado adicional
+        await this.sessionTraceService.addCertificateToSession(
+          from,
+          certificateRequestId,
+          certificateDisplayInfo
+        ).catch(error => {
+          this.logger.error(`❌ Error al agregar certificado adicional a sesión:`, error);
+        });
+      } else {
+        // Actualizar traza existente
+        await this.sessionTraceService.markProcessingCertificate(
+          from,
+          certificateRequestId,
+          certificateDisplayInfo
+        ).catch(error => {
+          this.logger.error(`❌ Error al marcar procesamiento en traza:`, error);
+        });
+      }
+
+      // 1.5. Asignar usuario solicitante inmediatamente
+      if (session.userId) {
+        try {
+          await this.certificateRequestRepository.assignRequesterUser(certificateRequestId, session.userId);
+          this.logger.log(`👤 Usuario ${session.userId} asignado como solicitante de ${certificateRequestId}`);
+        } catch (assignError) {
+          this.logger.error(`⚠️ Error al asignar usuario solicitante:`, assignError instanceof Error ? assignError.message : String(assignError));
+        }
+      }
+
+      // 2. Actualizar estado a IN_PROGRESS
+      await this.updateCertificateRequestStatusUseCase.execute({
+        id: certificateRequestId,
+        status: CertificateRequestStatus.IN_PROGRESS,
+        userId: session.userId,
+      });
+
+      this.logger.log(`🔄 Solicitud ${certificateRequestId} marcada como IN_PROGRESS`);
+
+    } catch (error) {
+      this.logger.error(`❌ Error al crear solicitud de certificado para ${from}:`, error instanceof Error ? error.message : String(error));
+      await this.sendMessageAndLog(from, '❌ Error al registrar tu solicitud. Intenta más tarde.', messageId, phoneNumberId);
+      this.sessionManager.updateSessionState(from, SessionState.AUTHENTICATED);
+      await onGenericAuthenticatedStateCallback();
+      return;
+    }
 
     try {
       // 🔄 RECARGAR DATOS FRESCOS DESDE LA BASE DE DATOS
@@ -405,7 +494,6 @@ Por favor espera un momento.`;
         phone: from,
       };
 
-
       // Si el certificado es con funciones, obtiene y agrupa las funciones del cargo
       let functionsForTemplate: Array<{ categoryName: string; functions: string[] }> | null = null;
       if (finalCertificateTypeKey.includes('con_funciones')) {
@@ -443,16 +531,63 @@ Por favor espera un momento.`;
         }
       }
 
-      const chatHistory = this.transcriptionService.getTranscription(from);
+      const chatHistoryFinal = this.transcriptionService.getTranscription(from);
       const success = await this.emailService.sendCertificateEmail(
         session.email, 
         clientDataForCertificate as any, 
         finalCertificateTypeKey, 
-        chatHistory,
+        chatHistoryFinal,
         functionsForTemplate,
       );
 
       if (success) {
+        // 🎉 MARCAR SOLICITUD COMO COMPLETADA CON TODOS LOS DETALLES
+        if (certificateRequestId) {
+          try {
+            // 1. Actualizar estado a COMPLETED
+            await this.updateCertificateRequestStatusUseCase.execute({
+              id: certificateRequestId,
+              status: CertificateRequestStatus.COMPLETED,
+              userId: session.userId,
+            });
+
+            // 2. Usar el repositorio directamente para actualizar campos específicos
+            const certificateRequestRepository = this.certificateRequestRepository;
+            
+            // 3. Marcar como completado con detalles adicionales
+            await certificateRequestRepository.markAsCompleted(
+              certificateRequestId,
+              `certificate_${finalCertificateTypeKey}_${Date.now()}.pdf`, // Nombre del documento
+              'Certificado generado y enviado exitosamente'
+            );
+
+            // 4. Marcar documento como enviado
+            await certificateRequestRepository.markDocumentAsSent(certificateRequestId);
+
+            // 5. Asignar usuario solicitante si no está asignado
+            if (session.userId) {
+              await certificateRequestRepository.assignRequesterUser(certificateRequestId, session.userId);
+            }
+
+            // 6. Actualizar los mensajes de interacción finales
+            const finalChatHistory = this.transcriptionService.getTranscription(from);
+            await certificateRequestRepository.updateInteractionMessages(certificateRequestId, finalChatHistory);
+
+            // 7. Guardar datos adicionales del certificado generado
+            await certificateRequestRepository.updateRequestData(certificateRequestId, {
+              ...clientDataForCertificate,
+              functionsForTemplate: functionsForTemplate,
+              generated_at: new Date().toISOString(),
+              certificate_display_info: certificateDisplayInfo,
+              final_certificate_type_key: finalCertificateTypeKey,
+            });
+
+            this.logger.log(`✅ Solicitud ${certificateRequestId} completamente procesada: COMPLETED, document_sent=true, is_completed=true, requester_user_id=${session.userId}`);
+          } catch (updateError) {
+            this.logger.error(`⚠️ Error al actualizar detalles completos de solicitud ${certificateRequestId}:`, updateError instanceof Error ? updateError.message : String(updateError));
+          }
+        }
+
         const currentDate = new Date();
         const formattedDate = currentDate.toLocaleDateString('es-CO');
         const formattedTime = currentDate.toLocaleTimeString('es-CO');
@@ -465,6 +600,7 @@ Por favor espera un momento.`;
 * Tipo: ${certificateDisplayInfo}
 * Fecha: ${formattedDate}
 * Hora: ${formattedTime}
+* ID Solicitud: ${certificateRequestId || 'N/A'}
 
 📧 *El certificado ha sido enviado a:* ${session.email}
 
@@ -475,12 +611,40 @@ Por favor espera un momento.`;
         // Mostrar menú final con botones en lugar del callback genérico
         await this.showFinalActionMenu(from, messageId, phoneNumberId);
       } else {
+        // ❌ MARCAR SOLICITUD COMO FALLIDA
+        if (certificateRequestId) {
+          try {
+            await this.updateCertificateRequestStatusUseCase.execute({
+              id: certificateRequestId,
+              status: CertificateRequestStatus.FAILED,
+              userId: session.userId,
+            });
+            this.logger.log(`❌ Solicitud ${certificateRequestId} marcada como FAILED`);
+          } catch (updateError) {
+            this.logger.error(`⚠️ Error al actualizar estado de solicitud fallida ${certificateRequestId}:`, updateError instanceof Error ? updateError.message : String(updateError));
+          }
+        }
+
         await this.sendMessageAndLog(from, 'Lo siento, hubo un error al generar o enviar tu certificado. Intenta más tarde o contacta a RRHH.', messageId, phoneNumberId);
         this.sessionManager.updateSessionState(from, SessionState.AUTHENTICATED);
         await onGenericAuthenticatedStateCallback();
       }
 
     } catch (error) {
+      // ❌ MARCAR SOLICITUD COMO FALLIDA EN CASO DE ERROR GENERAL
+      if (certificateRequestId) {
+        try {
+          await this.updateCertificateRequestStatusUseCase.execute({
+            id: certificateRequestId,
+            status: CertificateRequestStatus.FAILED,
+            userId: session.userId,
+          });
+          this.logger.log(`❌ Solicitud ${certificateRequestId} marcada como FAILED por error general`);
+        } catch (updateError) {
+          this.logger.error(`⚠️ Error al actualizar estado de solicitud fallida ${certificateRequestId}:`, updateError instanceof Error ? updateError.message : String(updateError));
+        }
+      }
+
       this.logger.error(`Error en processCertificateRequest para ${from}:`, error instanceof Error ? error.message : String(error), error instanceof Error ? error.stack : undefined);
       await this.sendMessageAndLog(from, '❌ Ocurrió un error inesperado. Contacta a soporte.', messageId, phoneNumberId);
       this.sessionManager.updateSessionState(from, SessionState.AUTHENTICATED);

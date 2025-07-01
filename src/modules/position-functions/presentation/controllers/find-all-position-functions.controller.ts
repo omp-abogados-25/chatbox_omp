@@ -1,5 +1,6 @@
-import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
+import { Controller, Get, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { FindAllPositionFunctionsUseCase } from '../../application/use-cases';
 import { PositionFunctionResponseDto } from '../dtos';
 import { PositionFunction } from '../../domain/entities';
@@ -16,7 +17,9 @@ function mapDomainToResponseDto(domainEntity: PositionFunction): PositionFunctio
 }
 
 @ApiTags('Position Functions')
-@Controller('integrations/position-functions')
+@Controller('position-functions')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class FindAllPositionFunctionsController {
   constructor(
     private readonly findAllPositionFunctionsUseCase: FindAllPositionFunctionsUseCase,

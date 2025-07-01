@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activación de Cuenta - OMP Abogados</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header img {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .welcome-message {
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .activation-code-container {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+            border-left: 5px solid #3b82f6;
+        }
+
+        .activation-code {
+            font-size: 36px;
+            font-weight: 900;
+            color: #1e40af;
+            letter-spacing: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .instructions {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+
+        .security-note {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+
+        .footer {
+            background: #f9fafb;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer p {
+            margin: 5px 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .highlight {
+            color: #1e40af;
+            font-weight: 600;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 12px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .activation-code {
+                font-size: 28px;
+                letter-spacing: 4px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="cid:logo-omp" alt="OMP Abogados Logo">
+            <h1>¡Bienvenido al Sistema!</h1>
+        </div>
+
+        <div class="content">
+            <div class="welcome-message">
+                <strong>Hola {{fullName}},</strong><br>
+                Tu cuenta ha sido activada en el sistema de OMP Abogados. Para completar la configuración de tu acceso,
+                necesitas verificar tu identidad.
+            </div>
+
+            <div class="activation-code-container">
+                <h3 style="margin: 0 0 15px 0; color: #374151;">Tu código de activación es:</h3>
+                <div class="activation-code">{{activationCode}}</div>
+                <p style="margin: 15px 0 0 0; color: #6b7280; font-size: 14px;">
+                    Este código expira en <span class="highlight">{{expiresInMinutes}} minutos</span>
+                </p>
+            </div>
+
+            <div class="instructions">
+                <h4 style="margin: 0 0 15px 0; color: #92400e;">📋 Instrucciones:</h4>
+                <ol style="margin: 0; padding-left: 20px; color: #92400e;">
+                    <li>Ve al portal de login del sistema</li>
+                    <li>Haz clic en <strong>"Soy usuario nuevo"</strong></li>
+                    <li>Ingresa el código de activación mostrado arriba</li>
+                    <li>Configura tu contraseña de acceso</li>
+                    <li>¡Listo! Ya puedes acceder al sistema</li>
+                </ol>
+            </div>
+
+            <div class="security-note">
+                <h4 style="margin: 0 0 15px 0; color: #dc2626;">🔒 Nota de Seguridad:</h4>
+                <ul style="margin: 0; padding-left: 20px; color: #dc2626;">
+                    <li>Este código es personal e intransferible</li>
+                    <li>No compartas este código con terceros</li>
+                    <li>El código expira automáticamente después de {{expiresInMinutes}} minutos</li>
+                    <li>Solo tienes 3 intentos para ingresar el código correctamente</li>
+                </ul>
+            </div>
+
+            <p style="text-align: center; margin-top: 30px; color: #6b7280;">
+                Si no solicitaste esta activación o tienes alguna duda, contacta inmediatamente al administrador del
+                sistema.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p><strong>OMP Abogados</strong></p>
+            <p>Sistema de Gestión Empresarial</p>
+            <p>© {{currentYear}} Todos los derechos reservados</p>
+            <p style="font-size: 12px; color: #9ca3af;">
+                Este es un mensaje automático, por favor no respondas a este correo.
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

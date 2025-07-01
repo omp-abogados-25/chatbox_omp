@@ -1,5 +1,6 @@
-import { Controller, Delete, Param, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Delete, Param, HttpCode, HttpStatus, NotFoundException, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { DeleteRoleFunctionUseCase } from '../../application/use-cases';
 import { RoleFunctionResponseDto } from '../dtos';
 import { RoleFunction } from '../../domain/entities';
@@ -16,7 +17,9 @@ function mapDomainToResponseDto(domainEntity: RoleFunction): RoleFunctionRespons
 }
 
 @ApiTags('Role Functions')
-@Controller('integrations/role-functions')
+@Controller('role-functions')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class DeleteRoleFunctionController {
   constructor(
     private readonly deleteRoleFunctionUseCase: DeleteRoleFunctionUseCase,

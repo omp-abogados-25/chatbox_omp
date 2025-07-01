@@ -1,5 +1,6 @@
-import { Controller, Get, Param, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Param, HttpCode, HttpStatus, NotFoundException, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { FindUserByIdUseCase } from '../../application/use-cases';
 import { UserResponseDto } from '../dtos';
 import { User } from '../../domain/entities';
@@ -17,6 +18,8 @@ function mapDomainToResponseDto(domainEntity: User): UserResponseDto {
     salary: domainEntity.salary,
     transportation_allowance: domainEntity.transportation_allowance,
     gender: domainEntity.gender,
+    can_login: domainEntity.can_login,
+    password: domainEntity.password,
     positionId: domainEntity.positionId,
     created_at: domainEntity.created_at,
     updated_at: domainEntity.updated_at,
@@ -24,7 +27,9 @@ function mapDomainToResponseDto(domainEntity: User): UserResponseDto {
 }
 
 @ApiTags('Users')
-@Controller('integrations/users')
+@Controller('users')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class FindUserByIdController {
   constructor(
     private readonly findUserByIdUseCase: FindUserByIdUseCase,

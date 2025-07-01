@@ -1,5 +1,6 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiCreatedResponse, ApiBadRequestResponse } from '@nestjs/swagger';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiCreatedResponse, ApiBadRequestResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { CreateUserUseCase } from '../../application/use-cases';
 import { CreateUserRequestDto, UserResponseDto } from '../dtos';
 import { User } from '../../domain/entities';
@@ -16,6 +17,8 @@ function mapDomainToResponseDto(domainEntity: User): UserResponseDto {
     salary: domainEntity.salary,
     transportation_allowance: domainEntity.transportation_allowance,
     gender: domainEntity.gender,
+    can_login: domainEntity.can_login,
+    password: domainEntity.password,
     positionId: domainEntity.positionId,
     created_at: domainEntity.created_at,
     updated_at: domainEntity.updated_at,
@@ -23,7 +26,9 @@ function mapDomainToResponseDto(domainEntity: User): UserResponseDto {
 }
 
 @ApiTags('Users')
-@Controller('integrations/users')
+@Controller('users')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class CreateUserController {
   constructor(
     private readonly createUserUseCase: CreateUserUseCase,
@@ -34,14 +39,8 @@ export class CreateUserController {
   @ApiOperation({ summary: 'Crear un nuevo usuario', description: 'Registra un nuevo usuario en el sistema.' })
   @ApiCreatedResponse({ description: 'El usuario ha sido creado exitosamente.', type: UserResponseDto })
   @ApiBadRequestResponse({ description: 'Los datos proporcionados son inválidos.' })
-  async create(@Body() createDto: CreateUserRequestDto[]): Promise<UserResponseDto> {
-    //const newDomainEntity = await this.createUserUseCase.execute(createDto);
-    //return mapDomainToResponseDto(newDomainEntity);
-
-    let newDomainEntity;
-    for (const user of createDto) {
-      newDomainEntity = await this.createUserUseCase.execute(user);
-    }
+  async create(@Body() createDto: CreateUserRequestDto): Promise<UserResponseDto> {
+    const newDomainEntity = await this.createUserUseCase.execute(createDto);
     return mapDomainToResponseDto(newDomainEntity);
   }
 } 

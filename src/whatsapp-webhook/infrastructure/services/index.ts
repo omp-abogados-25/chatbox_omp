@@ -5,6 +5,10 @@ export * from './rate-limit.service';
 export * from './memory-cache.service';
 export * from './mfa-email.service';
 
+// Servicios de Password Reset
+export * from './password-reset.service';
+export * from './password-reset-email.service';
+
 // Servicios de Email
 export * from './nodemailer-email.service';
 

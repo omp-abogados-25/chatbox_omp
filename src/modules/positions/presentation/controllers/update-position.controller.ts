@@ -1,5 +1,6 @@
-import { Controller, Put, Param, Body, HttpCode, HttpStatus, NotFoundException, Inject } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiBadRequestResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Put, Param, Body, HttpCode, HttpStatus, NotFoundException, Inject, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiBadRequestResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { UpdatePositionUseCase } from '../../application/use-cases';
 import { UpdatePositionRequestDto, PositionResponseDto } from '../dtos';
 import { Position } from '../../domain/entities';
@@ -17,7 +18,9 @@ function mapDomainToResponseDto(domainEntity: Position): PositionResponseDto {
 }
 
 @ApiTags('Positions')
-@Controller('integrations/positions')
+@Controller('positions')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class UpdatePositionController {
   constructor(
     private readonly updatePositionUseCase: UpdatePositionUseCase,
