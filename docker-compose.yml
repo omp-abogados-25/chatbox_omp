@@ -1,6 +1,36 @@
 version: '3.8'
 
 services:
+  # Backend API
+  api:
+    build: .
+    container_name: omp_chatbox_api
+    restart: always
+    ports:
+      - "3000:3000"  # Puerto expuesto públicamente
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - REDIS_URL=redis://redis:6379
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - WHATSAPP_TOKEN=${WHATSAPP_TOKEN}
+      - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID}
+      - WHATSAPP_WEBHOOK_VERIFY_TOKEN=${WHATSAPP_WEBHOOK_VERIFY_TOKEN}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./src:/app/src  # Para desarrollo hot-reload
+      - ./assets:/app/assets
+      - ./temp_pdf_generation:/app/temp_pdf_generation
+
+  # Base de datos PostgreSQL
   db:
     image: postgres:latest
     container_name: postgres_db
@@ -14,6 +44,19 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # Redis para cache y sesiones
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
     driver: local 

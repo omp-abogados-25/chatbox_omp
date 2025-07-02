@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, Length, IsUUID, IsEmail } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, Length, IsUUID, IsEmail, IsBoolean, ValidateIf } from 'class-validator';
 
 export class CreateUserRequestDto {
   @ApiProperty({ description: 'Nombre Completo del usuario.', example: 'Juan Pérez' })
@@ -49,6 +49,25 @@ export class CreateUserRequestDto {
   @IsOptional()
   @IsString({ message: 'El género debe ser una cadena de texto.' })
   gender?: string;
+
+  @ApiPropertyOptional({
+    description: 'Indica si el usuario puede iniciar sesión',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'El campo can_login debe ser un valor booleano.' })
+  can_login?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Contraseña del usuario (obligatoria si can_login es true)',
+    example: 'password123',
+  })
+  @IsOptional()
+  @ValidateIf((obj) => obj.can_login === true)
+  @IsNotEmpty({ message: 'La contraseña es obligatoria cuando el usuario puede iniciar sesión.' })
+  @IsString({ message: 'La contraseña debe ser una cadena de texto.' })
+  @Length(6, 100, { message: 'La contraseña debe tener entre 6 y 100 caracteres.' })
+  password?: string;
 
   @ApiPropertyOptional({
     description: 'ID del Cargo asignado al usuario (opcional, UUID).',

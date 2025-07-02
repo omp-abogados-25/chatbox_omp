@@ -2,6 +2,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { SessionManagerService } from './session-manager.service';
 import { EchoMessageService } from './echo-message.service';
 import { ChatTranscriptionService } from './chat-transcription.service';
+import { SessionTraceService } from './session-trace.service';
 import { SessionState, DocumentType, IMfaService, IRateLimitService, IMfaEmailService, Session } from '../../domain';
 import { FindUserByIdentificationNumberUseCase } from '../../../modules/users/application/use-cases';
 import { User as DomainUser } from '../../../modules/users/domain/entities/user.entity';
@@ -20,6 +21,7 @@ export class MfaConversationFlowService {
     private readonly messageService: EchoMessageService,
     private readonly transcriptionService: ChatTranscriptionService,
     private readonly findUserByIdentificationNumberUseCase: FindUserByIdentificationNumberUseCase,
+    private readonly sessionTraceService: SessionTraceService,
   ) {}
 
   private async sendMessageAndLog(from: string, message: string, messageId: string, phoneNumberId: string): Promise<void> {
@@ -131,6 +133,15 @@ Por favor revisa tu bandeja de entrada (y spam) e ingresa el código de 6 dígit
       await this.sendMessageAndLog(from, mfaPromptMessage, messageId, phoneNumberId);
       this.sessionManager.updateSessionState(from, SessionState.WAITING_MFA_VERIFICATION);
 
+      // 🔥 MARCAR SESIÓN EN PROGRESO - OTP ENVIADO
+      await this.sessionTraceService.markSessionInProgress(
+        from, 
+        documentNumber, 
+        `OTP enviado a ${this.maskEmail(emailForMfa)} - verificación en progreso`
+      ).catch(error => {
+        this.logger.error(`❌ Error al marcar sesión en progreso:`, error);
+      });
+
     } catch (error) {
       this.logger.error(`Error en initiateMfaProcess para ${documentNumber}:`, error instanceof Error ? error.message : String(error), error instanceof Error ? error.stack : undefined);
       await this.sendMessageAndLog(from, 'Lo sentimos, ocurrió un error inesperado durante el proceso de verificación. Intenta de nuevo más tarde.', messageId, phoneNumberId);
@@ -171,6 +182,28 @@ Por favor revisa tu bandeja de entrada (y spam) e ingresa el código de 6 dígit
       if (isValid) {
         await this.rateLimitService.unblockPhoneNumber(from); 
         this.sessionManager.updateSessionState(from, SessionState.AUTHENTICATED);
+        
+        // 🔥 MARCAR SESIÓN COMO AUTENTICADA
+        // Obtener el userId desde el documento en la sesión MFA
+        const mfaSession = await this.mfaService.getMfaSession(session.mfaSessionId);
+        let userId: string | undefined;
+        
+        if (mfaSession?.documentNumber) {
+          try {
+            const userFromDb = await this.findUserByIdentificationNumberUseCase.execute(mfaSession.documentNumber);
+            userId = userFromDb?.id;
+          } catch (error) {
+            this.logger.warn(`No se pudo obtener userId para documento ${mfaSession.documentNumber}:`, error);
+          }
+        }
+        
+        await this.sessionTraceService.markSessionAuthenticated(
+          from, 
+          userId, 
+          'Usuario autenticado exitosamente con código OTP'
+        ).catch(error => {
+          this.logger.error(`❌ Error al marcar sesión como autenticada:`, error);
+        });
         
         await this.sendMessageAndLog(
           from,

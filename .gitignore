@@ -82,6 +82,9 @@ build/Release
 node_modules/
 jspm_packages/
 
+# Snowpack dependency directory (https://snowpack.dev/)
+web_modules/
+
 # TypeScript cache
 *.tsbuildinfo
 
@@ -90,6 +93,9 @@ jspm_packages/
 
 # Optional eslint cache
 .eslintcache
+
+# Optional stylelint cache
+.stylelintcache
 
 # Microbundle cache
 .rpt2_cache/
@@ -119,7 +125,9 @@ dist
 
 # Gatsby files
 .cache/
-public
+# Comment in the public line in if your project uses Gatsby and not Next.js
+# https://nextjs.org/docs/api-reference/next.config.js/introduction
+# public
 
 # Vuepress build output
 .vuepress/dist
@@ -136,17 +144,35 @@ public
 # TernJS port file
 .tern-port
 
-# PM2 logs and dumps
-.pm2/
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
 
-# SSH keys
-*.pem
-*.ppk
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
 
-# Temporary files
-temp_*
-
-*.md
+# Archivos específicos del proyecto
+registros guardados.json
+funciones_sin_duplicados.json
 *.pdf
 *.xlsx
-.vscode/*
+Trabajo final. Psicomotricidad.pdf
+
+# Cloudflare URL temporal
+.cloudflare-url
+
+# URL estable guardada
+.stable-url
+
+# Cloudflared executable
+cloudflared.exe
+*.md
+*.bat
+*.xlsx
+*.tsv
+*.mjs
+*.json
+*.csv

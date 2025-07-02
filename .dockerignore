@@ -1,0 +1,56 @@
+# Dependencias
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de desarrollo
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos temporales
+.tmp
+.temp
+temp_pdf_generation/*
+
+# Archivos de Git
+.git
+.gitignore
+
+# Archivos de IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de test
+coverage
+.nyc_output
+
+# Archivos de build
+dist
+
+# Archivos de documentación
+*.md
+!README.md
+
+# Archivos específicos del proyecto
+registros\ guardados.json
+funciones_sin_duplicados.json
+*.pdf
+*.xlsx
+Trabajo\ final.\ Psicomotricidad.pdf 

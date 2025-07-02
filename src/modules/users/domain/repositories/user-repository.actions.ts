@@ -9,6 +9,8 @@ export interface CreateUserInput {
   salary: string;
   transportation_allowance: string;
   gender?: string;
+  can_login?: boolean;
+  password?: string;
   positionId?: string | null;
 }
 
@@ -21,6 +23,8 @@ export interface UpdateUserInput {
   salary?: string;
   transportation_allowance?: string;
   gender?: string;
+  can_login?: boolean;
+  password?: string;
   positionId?: string | null;
 }
 
@@ -38,6 +42,10 @@ export abstract class AbstractFindUserByIdRepository {
 
 export abstract class AbstractFindUserByIdentificationNumberRepository {
   abstract execute(identificationNumber: string): Promise<User | null>;
+}
+
+export abstract class AbstractFindUserByEmailRepository {
+  abstract execute(email: string): Promise<User | null>;
 }
 
 export abstract class AbstractUpdateUserRepository {

@@ -1,5 +1,6 @@
-import { Controller, Delete, Param, HttpCode, HttpStatus, NotFoundException, Inject } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Delete, Param, HttpCode, HttpStatus, NotFoundException, Inject, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { DeletePositionUseCase } from '../../application/use-cases';
 import { PositionResponseDto } from '../dtos'; // Aún se usa para el tipo de respuesta en Swagger y el mapeo
 import { Position } from '../../domain/entities';
@@ -17,7 +18,9 @@ function mapDomainToResponseDto(domainEntity: Position): PositionResponseDto {
 }
 
 @ApiTags('Positions')
-@Controller('integrations/positions')
+@Controller('positions')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class DeletePositionController {
   constructor(
     private readonly deletePositionUseCase: DeletePositionUseCase,

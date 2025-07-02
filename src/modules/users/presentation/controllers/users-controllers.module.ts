@@ -5,7 +5,8 @@ import {
   FindAllUsersController, 
   FindUserByIdController, 
   UpdateUserController, 
-  DeleteUserController 
+  DeleteUserController,
+  SetPasswordController
 } from '.';
 
 @Module({
@@ -16,6 +17,7 @@ import {
     FindUserByIdController,
     UpdateUserController,
     DeleteUserController,
+    SetPasswordController,
   ],
 })
 export class UsersControllersModule {} 

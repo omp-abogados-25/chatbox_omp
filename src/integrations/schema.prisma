@@ -7,23 +7,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id                      String    @id @default(uuid())
-  full_name               String    /// Nombre Completo del usuario
-  identification_number   String    @unique /// Cédula del usuario
-  issuing_place           String    /// Lugar de Expedición de la cédula
-  entry_date              String    /// Fecha de Ingreso del usuario a la empresa
-  email                   String    @unique /// Correo electrónico del usuario
-  salary                  String    /// Salario del usuario
-  transportation_allowance String    /// Auxilio de Transporte del usuario
-  gender                  String    @default("M") /// Género del usuario (M/F)
 
-  positionId String? /// ID del Cargo asignado al usuario (opcional)
-  position   Position? @relation(fields: [positionId], references: [id]) /// Relación con el cargo
-
-  created_at DateTime @default(now()) /// Fecha de creación del registro
-  updated_at DateTime @updatedAt /// Fecha de última actualización del registro
-}
 
 model Position {
   id          String   @id @default(uuid()) /// Identificador único del cargo (UUID)
@@ -57,4 +41,117 @@ model PositionFunction {
   updated_at DateTime @updatedAt /// Fecha de última actualización del registro
 
   @@unique([positionId, roleFunctionId]) /// Evita duplicados en la relación
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) /// ID único del refresh token
+  userId    String   /// ID del usuario propietario del token
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique /// Token de renovación único
+  expiresAt DateTime /// Fecha de expiración del token
+  isRevoked Boolean  @default(false) /// Indica si el token fue revocado
+
+  created_at DateTime @default(now()) /// Fecha de creación del registro
+  updated_at DateTime @updatedAt /// Fecha de última actualización del registro
+
+  @@map("refresh_tokens")
+}
+
+model CertificateRequest {
+  id                    String                     @id @default(uuid()) /// ID único de la solicitud
+  whatsapp_number       String                     /// Número de WhatsApp que realizó la solicitud
+  requester_name        String?                    /// Nombre del solicitante (si se proporciona)
+  requester_document    String?                    /// Documento del solicitante (si se proporciona)
+  certificate_type      String                     /// Tipo de certificado solicitado
+  request_data          Json?                      /// Datos adicionales de la solicitud en formato JSON
+  interaction_messages  Json?                      /// Historial de mensajes de la interacción
+  status                CertificateRequestStatus   @default(PENDING) /// Estado de la solicitud
+  document_generated    String?                    /// Ruta/URL del documento generado
+  document_sent         Boolean                    @default(false) /// Indica si el documento fue enviado
+  is_completed          Boolean                    @default(false) /// Indica si la solicitud finalizó
+  completion_reason     String?                    /// Razón de finalización (éxito, error, cancelación)
+  error_message         String?                    /// Mensaje de error si la solicitud falló
+  
+  // Usuario que realizó la solicitud (solicitante)
+  requester_user_id     String?                    /// ID del usuario solicitante (una vez identificado)
+  requester_user        User?                      @relation("RequesterUser", fields: [requester_user_id], references: [id])
+  
+  // Usuario que procesó la solicitud (administrador/empleado)
+  processed_by_user_id  String?                    /// ID del usuario que procesó la solicitud
+  processed_by_user     User?                      @relation("ProcessedByUser", fields: [processed_by_user_id], references: [id])
+  
+  processing_started_at DateTime?                  /// Fecha/hora cuando inició el procesamiento
+  processing_ended_at   DateTime?                  /// Fecha/hora cuando terminó el procesamiento
+  
+  // Trazas de sesión asociadas a esta solicitud
+  sessionTraces SessionTrace[]
+  
+  created_at DateTime @default(now()) /// Fecha de creación de la solicitud
+  updated_at DateTime @updatedAt /// Fecha de última actualización
+
+  @@map("certificate_requests")
+}
+
+enum CertificateRequestStatus {
+  PENDING           /// Pendiente de procesamiento
+  IN_PROGRESS       /// En proceso de generación
+  COMPLETED         /// Completada exitosamente
+  FAILED            /// Falló el procesamiento
+  CANCELLED         /// Cancelada por el usuario
+  WAITING_INFO      /// Esperando información adicional del usuario
+}
+
+model User {
+  id                      String    @id @default(uuid())
+  full_name               String    /// Nombre Completo del usuario
+  identification_number   String    @unique /// Cédula del usuario
+  issuing_place           String    /// Lugar de Expedición de la cédula
+  entry_date              String    /// Fecha de Ingreso del usuario a la empresa
+  email                   String    @unique /// Correo electrónico del usuario
+  salary                  String    /// Salario del usuario
+  transportation_allowance String    /// Auxilio de Transporte del usuario
+  gender                  String    @default("M") /// Género del usuario (M/F)
+  can_login               Boolean   @default(false) /// Indica si el usuario puede iniciar sesión
+  password                String?   /// Contraseña del usuario (obligatoria si can_login es true)
+  is_active               Boolean   @default(true) /// Indica si el usuario está activo (true) o eliminado (false)
+
+  positionId String? /// ID del Cargo asignado al usuario (opcional)
+  position   Position? @relation(fields: [positionId], references: [id]) /// Relación con el cargo
+  refreshTokens RefreshToken[] /// Tokens de renovación del usuario
+  
+  // Solicitudes donde este usuario es el solicitante
+  requestedCertificates CertificateRequest[] @relation("RequesterUser")
+  
+  // Solicitudes procesadas por este usuario (como administrador)
+  processedCertificateRequests CertificateRequest[] @relation("ProcessedByUser")
+  
+  // Trazas de sesión donde este usuario aparece
+  sessionTraces SessionTrace[]
+
+  created_at DateTime @default(now()) /// Fecha de creación del registro
+  updated_at DateTime @updatedAt /// Fecha de última actualización del registro
+}
+
+model SessionTrace {
+  id                     String                     @id @default(uuid()) /// ID único de la traza
+  phone_number           String                     /// Número de teléfono del usuario
+  session_id             String                     /// ID de la sesión
+  status                 String                     /// Estado de la traza (INICIADA, EN_PROGRESO, etc.)
+  document_number        String?                    /// Número de documento del usuario
+  user_id                String?                    /// ID del usuario (una vez identificado)
+  user                   User?                      @relation(fields: [user_id], references: [id])
+  certificate_request_id String?                    /// ID de la solicitud de certificado
+  certificate_request    CertificateRequest?        @relation(fields: [certificate_request_id], references: [id])
+  step_description       String                     /// Descripción del paso/estado
+  metadata               Json                       @default("{}") /// Metadata adicional en formato JSON
+  
+  created_at DateTime @default(now()) /// Fecha de creación del registro
+  updated_at DateTime @updatedAt /// Fecha de última actualización del registro
+  
+  @@index([phone_number])
+  @@index([session_id])
+  @@index([status])
+  @@index([certificate_request_id])
+  @@index([created_at])
+  @@map("session_traces")
 } 

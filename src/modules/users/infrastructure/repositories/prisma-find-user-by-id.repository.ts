@@ -15,6 +15,9 @@ function toDomainEntity(prismaEntity: PrismaUser): User {
     salary: String(prismaEntity.salary),
     transportation_allowance: String(prismaEntity.transportation_allowance),
     gender: (prismaEntity as any).gender,
+    can_login: (prismaEntity as any).can_login || false,
+    password: (prismaEntity as any).password || null,
+    is_active: (prismaEntity as any).is_active !== undefined ? (prismaEntity as any).is_active : true,
     positionId: prismaEntity.positionId ?? null,
     created_at: prismaEntity.created_at,
     updated_at: prismaEntity.updated_at,
@@ -27,8 +30,12 @@ export class PrismaFindUserByIdRepository implements AbstractFindUserByIdReposit
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(id: string): Promise<User | null> {
-    const prismaEntity = await this.prisma.user.findUnique({
-      where: { id },
+    // Buscar solo usuarios activos por defecto
+    const prismaEntity = await this.prisma.user.findFirst({
+      where: { 
+        id,
+        is_active: true
+      },
     });
     return toDomainEntity(prismaEntity);
   }

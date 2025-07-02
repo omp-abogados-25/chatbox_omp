@@ -6,6 +6,7 @@ import { FindUserByIdUseCase } from './find-user-by-id.use-case';
 import { UpdateUserUseCase } from './update-user.use-case';
 import { DeleteUserUseCase } from './delete-user.use-case';
 import { FindUserByIdentificationNumberUseCase } from './find-user-by-identification-number.use-case';
+import { SetPasswordUseCase } from './set-password.use-case';
 
 @Module({
   imports: [UsersInfrastructureModule],
@@ -16,6 +17,7 @@ import { FindUserByIdentificationNumberUseCase } from './find-user-by-identifica
     UpdateUserUseCase,
     DeleteUserUseCase,
     FindUserByIdentificationNumberUseCase,
+    SetPasswordUseCase,
   ],
   exports: [
     CreateUserUseCase,
@@ -24,6 +26,7 @@ import { FindUserByIdentificationNumberUseCase } from './find-user-by-identifica
     UpdateUserUseCase,
     DeleteUserUseCase,
     FindUserByIdentificationNumberUseCase,
+    SetPasswordUseCase,
   ],
 })
 export class UsersUseCasesModule {} 

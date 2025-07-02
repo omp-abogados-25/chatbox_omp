@@ -16,6 +16,9 @@ function toDomainEntity(prismaEntity: PrismaUser | null): User | null {
     salary: String(prismaEntity.salary), // El esquema de Prisma usa String para salary
     transportation_allowance: String(prismaEntity.transportation_allowance), // El esquema de Prisma usa String para transportation_allowance
     gender: (prismaEntity as any).gender,
+    can_login: (prismaEntity as any).can_login || false,
+    password: (prismaEntity as any).password || null,
+    is_active: (prismaEntity as any).is_active !== undefined ? (prismaEntity as any).is_active : true,
     positionId: prismaEntity.positionId ?? null,
     created_at: prismaEntity.created_at,
     updated_at: prismaEntity.updated_at,
@@ -31,8 +34,12 @@ export class PrismaFindUserByIdentificationNumberRepository implements AbstractF
     // Normalizar el número de identificación de entrada (quitar puntos)
     const normalizedIdentificationNumber = identificationNumber.replace(/\./g, '');
 
-    const prismaEntity = await this.prisma.user.findUnique({
-      where: { identification_number: normalizedIdentificationNumber }, // Buscar con el número normalizado
+    // Buscar solo usuarios activos por defecto
+    const prismaEntity = await this.prisma.user.findFirst({
+      where: { 
+        identification_number: normalizedIdentificationNumber,
+        is_active: true
+      },
     });
     return toDomainEntity(prismaEntity);
   }

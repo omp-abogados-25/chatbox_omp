@@ -8,6 +8,9 @@ export interface User {
   salary: string;
   transportation_allowance: string;
   gender: string;
+  can_login: boolean;
+  password?: string | null;
+  is_active: boolean;
   positionId?: string | null;
   created_at: Date;
   updated_at: Date;

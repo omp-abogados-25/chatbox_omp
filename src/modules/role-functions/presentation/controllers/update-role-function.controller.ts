@@ -1,5 +1,6 @@
-import { Controller, Put, Param, Body, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiBadRequestResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Put, Param, Body, HttpCode, HttpStatus, NotFoundException, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiNotFoundResponse, ApiBadRequestResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
 import { UpdateRoleFunctionUseCase } from '../../application/use-cases'; // Asumimos que existirá
 import { UpdateRoleFunctionRequestDto, RoleFunctionResponseDto } from '../dtos';
 import { RoleFunction } from '../../domain/entities'; // Asumimos que existirá la entidad RoleFunction
@@ -17,7 +18,9 @@ function mapDomainToResponseDto(domainEntity: RoleFunction): RoleFunctionRespons
 }
 
 @ApiTags('Role Functions')
-@Controller('integrations/role-functions')
+@Controller('role-functions')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class UpdateRoleFunctionController {
   constructor(
     private readonly updateRoleFunctionUseCase: UpdateRoleFunctionUseCase, // Se inyectará el caso de uso

@@ -16,6 +16,9 @@ function toDomainEntity(prismaEntity: PrismaUser): User {
     salary: String(prismaEntity.salary),
     transportation_allowance: String(prismaEntity.transportation_allowance),
     gender: (prismaEntity as any).gender,
+    can_login: (prismaEntity as any).can_login || false,
+    password: (prismaEntity as any).password || null,
+    is_active: (prismaEntity as any).is_active !== undefined ? (prismaEntity as any).is_active : true,
     positionId: prismaEntity.positionId ?? null,
     created_at: prismaEntity.created_at,
     updated_at: prismaEntity.updated_at,
@@ -52,6 +55,12 @@ export class PrismaUpdateUserRepository implements AbstractUpdateUserRepository 
     }
     if (data.gender !== undefined) {
       (updateData as any).gender = data.gender;
+    }
+    if (data.can_login !== undefined) {
+      (updateData as any).can_login = data.can_login;
+    }
+    if (data.password !== undefined) {
+      (updateData as any).password = data.password;
     }
     if (data.positionId !== undefined) {
       updateData.position = {

@@ -8,6 +8,7 @@ import {
   AbstractUpdateUserRepository,
   AbstractDeleteUserRepository,
   AbstractFindUserByIdentificationNumberRepository,
+  AbstractFindUserByEmailRepository,
 } from '../../domain/repositories';
 import {
   PrismaCreateUserRepository,
@@ -16,6 +17,7 @@ import {
   PrismaUpdateUserRepository,
   PrismaDeleteUserRepository,
   PrismaFindUserByIdentificationNumberRepository,
+  PrismaFindUserByEmailRepository,
 } from '.';
 @Module({
   providers: [
@@ -36,6 +38,10 @@ import {
       useClass: PrismaFindUserByIdentificationNumberRepository,
     },
     {
+      provide: AbstractFindUserByEmailRepository,
+      useClass: PrismaFindUserByEmailRepository,
+    },
+    {
       provide: AbstractUpdateUserRepository,
       useClass: PrismaUpdateUserRepository,
     },
@@ -49,6 +55,7 @@ import {
     AbstractFindAllUsersRepository,
     AbstractFindUserByIdRepository,
     AbstractFindUserByIdentificationNumberRepository,
+    AbstractFindUserByEmailRepository,
     AbstractUpdateUserRepository,
     AbstractDeleteUserRepository,
   ],
