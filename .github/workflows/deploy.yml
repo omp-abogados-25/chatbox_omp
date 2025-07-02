@@ -12,20 +12,46 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Deploy to EC2
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies and build
+      run: |
+        npm install
+        npm run build
+
+    - name: Create deployment package
+      run: |
+        mkdir deploy
+        cp -r dist deploy/
+        cp -r node_modules deploy/
+        cp package.json deploy/
+        cp -r src deploy/
+        echo "${{ secrets.ENV_BASE64 }}" | base64 -d > deploy/.env
+        tar -czf app.tar.gz -C deploy .
+
+    - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        source: "app.tar.gz"
+        target: "/home/ubuntu/"
+
+    - name: Deploy on server
       uses: appleboy/ssh-action@v0.1.7
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_PRIVATE_KEY }}
         script: |
-          echo "🚀 Iniciando despliegue en servidor..."
+          echo "🚀 Desplegando aplicación..."
           
-          # Configurar zona horaria del sistema para Colombia
-          echo "🕐 Configurando zona horaria a Colombia..."
-          sudo timedatectl set-timezone America/Bogota 2>/dev/null || echo "⚠️ No se pudo cambiar zona horaria del sistema (puede requerir permisos root)"
-          
-          # Configurar PATH para Node.js y npm
+          # Configurar PATH
           export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
           export NVM_DIR="$HOME/.nvm"
           if [ -s "$NVM_DIR/nvm.sh" ]; then
@@ -33,104 +59,34 @@ jobs:
             nvm use node || nvm use default
           fi
           
-          # Verificar que Node.js y npm estén disponibles
-          echo "🔍 Verificando Node.js y npm..."
-          node --version || echo "⚠️ Node.js no encontrado"
-          npm --version || echo "⚠️ npm no encontrado"
+          # Detener aplicación
+          pm2 stop chatbox-omp 2>/dev/null || echo "App no corriendo"
           
-          # Navegar al directorio del proyecto (nombre correcto)
-          cd /home/ubuntu/chatbox_omp || {
-            echo "❌ Error: Directorio del proyecto no encontrado"
-            echo "🔧 Creando directorio del proyecto..."
-            mkdir -p /home/ubuntu/chatbox_omp
-            cd /home/ubuntu/chatbox_omp
-            git init
-            git remote add origin https://github.com/${{ github.repository }}.git
-          }
-          
-          # Hacer backup del .env actual (si existe)
-          if [ -f .env ]; then
-            cp .env .env.backup.$(date +%Y%m%d_%H%M%S)
-            echo "📦 Backup del .env creado"
+          # Backup y limpiar
+          if [ -d "/home/ubuntu/chatbox_omp" ]; then
+            rm -rf /home/ubuntu/chatbox_omp_old
+            mv /home/ubuntu/chatbox_omp /home/ubuntu/chatbox_omp_old
           fi
           
-          # Detener la aplicación
-          echo "⏹️ Deteniendo aplicación..."
-          pm2 stop chatbox-omp 2>/dev/null || echo "⚠️ La aplicación no estaba corriendo"
+          # Extraer nueva versión
+          mkdir -p /home/ubuntu/chatbox_omp
+          cd /home/ubuntu/chatbox_omp
+          tar -xzf /home/ubuntu/app.tar.gz
           
-          # Actualizar código desde GitHub
-          echo "📥 Actualizando código desde GitHub..."
-          if [ -d .git ]; then
-            git fetch origin
-            git reset --hard origin/main
-            git pull origin main
-          else
-            echo "🔧 Inicializando repositorio git..."
-            git init
-            git remote add origin https://github.com/${{ github.repository }}.git
-            git fetch origin
-            git checkout -b main
-            git reset --hard origin/main
-          fi
-          
-          # Decodificar y restaurar variables de entorno
-          echo "🔧 Configurando variables de entorno..."
-          echo "${{ secrets.ENV_BASE64 }}" | base64 -d > .env
-          
-          # Verificar que el .env se decodificó correctamente
-          if [ ! -s .env ]; then
-            echo "❌ Error: Archivo .env vacío después de decodificar"
-            if [ -f .env.backup.* ]; then
-              echo "🔄 Restaurando backup del .env..."
-              cp .env.backup.* .env
-            fi
-            exit 1
-          fi
-          
-          echo "✅ Variables de entorno configuradas"
-          
-          # Verificar que npm esté disponible antes de continuar
-          if ! command -v npm &> /dev/null; then
-            echo "❌ Error: npm no está disponible"
-            echo "🔧 Intentando cargar Node.js..."
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install --lts
-            nvm use --lts
-          fi
-          
-          # Instalar/actualizar dependencias EN EL SERVIDOR
-          echo "📦 Instalando dependencias en el servidor..."
-          npm install
-          
-          # Generar cliente de Prisma
-          echo "🗄️ Generando cliente de Prisma..."
-          npx prisma generate --schema=./src/integrations/schema.prisma
-          
-          # Compilar la aplicación EN EL SERVIDOR
-          echo "🔨 Compilando aplicación en el servidor..."
-          npm run build
-          
-          # Verificar/instalar PM2 globalmente si no existe
+          # Instalar PM2 si no existe
           if ! command -v pm2 &> /dev/null; then
-            echo "📦 Instalando PM2..."
             npm install -g pm2
           fi
           
-          # Iniciar la aplicación con PM2
-          echo "🚀 Iniciando aplicación..."
+          # Iniciar aplicación
           pm2 start dist/main.js --name "chatbox-omp" --time || pm2 restart chatbox-omp
-          
-          # Guardar configuración de PM2
           pm2 save
           
-          # Verificar estado
-          echo "📊 Estado de la aplicación:"
+          # Verificar
           pm2 status chatbox-omp
+          pm2 logs chatbox-omp --lines 5 --nostream
           
-          # Mostrar logs recientes
-          echo "📋 Logs recientes:"
-          pm2 logs chatbox-omp --lines 10 --nostream
+          # Limpiar
+          rm -f /home/ubuntu/app.tar.gz
           
-          echo "✅ Despliegue completado exitosamente en el servidor" 
+          echo "✅ LISTO!" 
